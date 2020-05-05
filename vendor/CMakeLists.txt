@@ -17,7 +17,9 @@ target_include_directories(${GLM_LIB_NAME} INTERFACE ${GLM_INC_PATH})
 set(GLAD_LIB_NAME "glad")
 set(GLAD_SRC_PATH "${GLAD_LIB_NAME}/src")
 set(GLAD_INC_PATH "${GLAD_LIB_NAME}/include")
-
 add_library( ${GLAD_LIB_NAME} STATIC "${GLAD_SRC_PATH}/glad.c")
-
 target_include_directories(${GLAD_LIB_NAME} PUBLIC "${GLAD_INC_PATH}")
+
+set(ASSIMP_LIB_NAME assimp)
+set(ASSIMP_INC_PATH ${ASSIMP_LIB_NAME}/include)
+add_subdirectory(${ASSIMP_LIB_NAME})
