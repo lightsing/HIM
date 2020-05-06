@@ -10,7 +10,7 @@ add_subdirectory(vendor)
 
 include_directories(utils vendor/stb)
 
-file(GLOB SOURCE src/*.h src/*.cpp)
+file(GLOB SOURCE src/*.h src/*.cpp utils/learnopengl/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 target_include_directories(${PROJECT_NAME} PUBLIC external ${OPENGL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_gl_LIBRARY} glfw glad glm assimp)
