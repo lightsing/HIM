@@ -56,7 +56,7 @@ private:
     float lastX, lastY;
     float deltaTime, lastFrame;
     bool firstMouse = true;
-    Camera camera = Camera(glm::vec3(.0f, .0f, 3.f));
+    Camera camera = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT);
     Shader *ourShader;
     Model *ourModel;
 
