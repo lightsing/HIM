@@ -30,7 +30,7 @@ Application::Application(const char *title, int width, int height) {
     }
 
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
+//    stbi_set_flip_vertically_on_load(true);
 
     // configure global openGL state
     glEnable(GL_DEPTH_TEST);
@@ -42,8 +42,13 @@ Application::Application(const char *title, int width, int height) {
     lastY = height / 2.f;
     deltaTime = 0.f;
     lastFrame = 0.f;
+    camera = Camera(
+            glm::vec3(4.0f, 3.0f, 3.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f)
+            );
     ourShader = new Shader("res/shader.vs", "res/shader.fs");
-    ourModel = new Model("res/cube.obj");
+    ourModel = new Model("res/cube/Cube.obj");
 }
 
 void Application::preRender() {
@@ -65,9 +70,9 @@ void Application::render() {
     ourShader->use();
 
     // view/projection transformations
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) width / (float) height, 0.1f,
-                                            100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float) width / (float) height,
+                                            camera.zNear, camera.zFar);
+    glm::mat4 view = camera.getViewMatrix();
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
@@ -89,15 +94,25 @@ void Application::postRender() {
 void Application::processInput() {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(m_window, true);
-
+    // keyboard movement
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        camera.moveAround(CameraMovement::FORWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        camera.moveAround(CameraMovement::BACKWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        camera.moveAround(CameraMovement::LEFT, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        camera.moveAround(CameraMovement::RIGHT, deltaTime);
+    if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.moveAround(CameraMovement::UP, deltaTime);
+    if (glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.moveAround(CameraMovement::DOWN, deltaTime);
+    // change moving speed
+    if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        camera.changeSpeed(SPEED_FAST_DEFAULT);
+    else {
+        camera.changeSpeed(SPEED_NORMAL_DEFAULT);
+    }
 }
 
 void Application::mouseCallback(double xpos, double ypos) {
@@ -113,7 +128,7 @@ void Application::mouseCallback(double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    camera.lookAround(xoffset, yoffset);
 }
 
 void Application::keyboardCallback(int key, int scancode, int action, int mods) {
@@ -122,7 +137,7 @@ void Application::keyboardCallback(int key, int scancode, int action, int mods) 
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void Application::scrollCallback(double xoffset, double yoffset) {
-    camera.ProcessMouseScroll(yoffset);
+    camera.zoom(yoffset);
 }
 
 void Application::framebufferSizeCallback(int width, int height) {
