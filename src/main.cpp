@@ -1,6 +1,8 @@
 #include "Application.h"
+#include "maze.h"
 
 int main() {
+
     Application::init();
     auto application = Application("HIM", 800, 600);
 
