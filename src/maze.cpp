@@ -93,3 +93,6 @@ int Maze::get_row_num() const {
     return 2 * this->row + 1;
 }
 
+bool Maze::isWall(int i, int j) const {
+    return maze_map[i][j] == 1;
+}

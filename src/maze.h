@@ -23,6 +23,7 @@ public:
     void print_maze() const;
     int get_row_num() const;
     int get_col_num() const;
+    bool isWall(int i, int j) const;
 };
 
 #endif //HIM_MAZE_H
