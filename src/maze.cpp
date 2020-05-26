@@ -77,7 +77,7 @@ int **Maze::get_maze() const {
 void Maze::print_maze() const {
     for (int x = 1; x <= row * 2 + 1; ++x) {
         for (int y = 1; y <= col * 2 + 1; ++y) {
-            std::string value = this->maze_map[x][y] == 0 ? "*" : " ";
+            std::string value = this->maze_map[x][y] == 0 ? " " : "*";
             std::cout << value;
         }
         std::cout << std::endl;
@@ -94,5 +94,5 @@ int Maze::get_row_num() const {
 }
 
 bool Maze::isWall(int i, int j) const {
-    return maze_map[i+1][j+1] == 1;
+    return maze_map[j+1][i+1] == 1;
 }
