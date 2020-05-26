@@ -1,3 +1,5 @@
+#include <string>
+
 #include "maze.h"
 
 Maze::Maze(int num_of_row, int num_of_col) {
