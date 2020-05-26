@@ -48,7 +48,7 @@ Application::Application(const char *title, int width, int height) {
             glm::vec3(0.0f, 0.0f, 0.0f)
             );
     ourShader = new Shader("res/shader.vs", "res/shader.fs");
-    ourModel = new Model("res/cube/Cube.obj");
+    ourModel = new Model("res/assets/stone.obj");
 }
 
 void Application::preRender() {
