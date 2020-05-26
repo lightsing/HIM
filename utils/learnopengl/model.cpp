@@ -11,14 +11,15 @@
 #include <learnopengl/model.h>
 
 using namespace std;
-namespace fs = std::experimental::filesystem;
+//namespace fs = std::experimental::filesystem;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma) {
     string normalized_path(path);
     normalized_path.erase(std::unique(normalized_path.begin(), normalized_path.end(), [](char a, char b) {
         return a == '\\' && b == '\\';
     }), normalized_path.end());
-    string filename = (fs::path(directory) / fs::path(normalized_path)).generic_string();
+    //string filename = (fs::path(directory) / fs::path(normalized_path)).generic_string();
+    string filename = directory + "/" + normalized_path;
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
