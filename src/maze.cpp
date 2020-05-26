@@ -94,5 +94,5 @@ int Maze::get_row_num() const {
 }
 
 bool Maze::isWall(int i, int j) const {
-    return maze_map[i][j] == 1;
+    return maze_map[i+1][j+1] == 1;
 }
