@@ -3,7 +3,7 @@
 //
 
 #include "Application.h"
-
+#include "maze.h"
 
 Application::Application(const char *title, int width, int height) {
     // glfw window creation
@@ -48,7 +48,10 @@ Application::Application(const char *title, int width, int height) {
             glm::vec3(0.0f, 0.0f, 0.0f)
             );
     ourShader = new Shader("res/shader.vs", "res/shader.fs");
-    ourModel = new Model("res/assets/stone.obj");
+    stoneModel = new Model("res/assets/stone.obj");
+    bedrockModel = new Model("res/assets/bedrock.obj");
+    maze = new Maze(17, 19);
+    maze->print_maze();
 }
 
 void Application::preRender() {
@@ -76,13 +79,29 @@ void Application::render() {
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
-    // render the loaded model
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model,
-                           glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
-    ourShader->setMat4("model", model);
-    ourModel->Draw(*ourShader);
+    for(int i = -10; i < maze->get_col_num() + 10; ++i)
+        for(int j = -10; j < maze->get_row_num() + 10; ++j) {
+            // render the loaded model
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model,
+                                   glm::vec3(i * 2., -.5f, j * 2.)); // translate it down so it's at the center of the scene
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+            ourShader->setMat4("model", model);
+            bedrockModel->Draw(*ourShader);
+        }
+    for(int i = 0; i < maze->get_col_num(); ++i)
+        for(int j = 0; j < maze->get_row_num(); ++j) {
+            if (!maze->isWall(i, j)) continue;
+            for(int _ = 1; _ < 6; ++_) {
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model,
+                                       glm::vec3(i * 2., _ * 2., j * 2.)); // translate it down so it's at the center of the scene
+                model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+                ourShader->setMat4("model", model);
+                stoneModel->Draw(*ourShader);
+            }
+        }
+
 }
 
 void Application::postRender() {

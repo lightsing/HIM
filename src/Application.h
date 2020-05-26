@@ -16,6 +16,8 @@
 #include <learnopengl/shader_m.h>
 #include <learnopengl/model.h>
 
+#include "maze.h"
+
 class Application {
 public:
     Application() = delete;
@@ -58,7 +60,9 @@ private:
     bool firstMouse = true;
     Camera camera = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT);
     Shader *ourShader;
-    Model *ourModel;
+    Model *stoneModel;
+    Model *bedrockModel;
+    Maze *maze;
 
     void processInput();
 
