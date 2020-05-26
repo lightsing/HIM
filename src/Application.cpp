@@ -93,10 +93,20 @@ void Application::render() {
             ourShader->setMat4("model", model);
             models->at("bedrock").Draw(*ourShader);
         }
+    for(int i = -10; i < maze->get_col_num() + 10; ++i)
+        for(int j = -10; j < maze->get_row_num() + 10; ++j) {
+            // render the loaded model
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model,
+                                   glm::vec3(i * 2., 2.f, j * 2.)); // translate it down so it's at the center of the scene
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+            ourShader->setMat4("model", model);
+            models->at("dirt").Draw(*ourShader);
+        }
     for(int i = 0; i < maze->get_col_num(); ++i)
         for(int j = 0; j < maze->get_row_num(); ++j) {
             if (!maze->isWall(i, j)) continue;
-            for(int _ = 1; _ < 6; ++_) {
+            for(int _ = 2; _ < 6; ++_) {
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model,
                                        glm::vec3(i * 2., _ * 2., j * 2.)); // translate it down so it's at the center of the scene
