@@ -3,7 +3,8 @@
 //
 
 #include "Application.h"
-#include "maze.h"
+
+static string model_list[] = { "stone", "dirt", "bedrock" };
 
 Application::Application(const char *title, int width, int height) {
     // glfw window creation
@@ -48,10 +49,13 @@ Application::Application(const char *title, int width, int height) {
             glm::vec3(0.0f, 0.0f, 0.0f)
             );
     ourShader = new Shader("res/shader.vs", "res/shader.fs");
-    stoneModel = new Model("res/assets/stone.obj");
-    bedrockModel = new Model("res/assets/bedrock.obj");
+    models = new map<string, Model>;
+    for(const string& key : model_list) {
+        models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
+    }
     maze = new Maze(17, 19);
     maze->print_maze();
+
 }
 
 void Application::preRender() {
@@ -84,10 +88,10 @@ void Application::render() {
             // render the loaded model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model,
-                                   glm::vec3(i * 2., -.5f, j * 2.)); // translate it down so it's at the center of the scene
+                                   glm::vec3(i * 2., .0f, j * 2.)); // translate it down so it's at the center of the scene
             model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
             ourShader->setMat4("model", model);
-            bedrockModel->Draw(*ourShader);
+            models->at("bedrock").Draw(*ourShader);
         }
     for(int i = 0; i < maze->get_col_num(); ++i)
         for(int j = 0; j < maze->get_row_num(); ++j) {
@@ -98,7 +102,7 @@ void Application::render() {
                                        glm::vec3(i * 2., _ * 2., j * 2.)); // translate it down so it's at the center of the scene
                 model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
                 ourShader->setMat4("model", model);
-                stoneModel->Draw(*ourShader);
+                models->at("stone").Draw(*ourShader);
             }
         }
 

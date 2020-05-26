@@ -60,8 +60,7 @@ private:
     bool firstMouse = true;
     Camera camera = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT);
     Shader *ourShader;
-    Model *stoneModel;
-    Model *bedrockModel;
+    map<string, Model> *models;
     Maze *maze;
 
     void processInput();
