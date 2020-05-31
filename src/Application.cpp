@@ -6,11 +6,14 @@
 
 static string model_list[] = { "stone", "dirt", "bedrock" };
 
-Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width) {
+Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width, bool debug) {
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(width, height, title, glfwGetPrimaryMonitor(), nullptr);
-//    GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);    // for debug
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (debug) {
+        monitor = nullptr;
+    }
+    GLFWwindow *window = glfwCreateWindow(width, height, title, monitor, nullptr);
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

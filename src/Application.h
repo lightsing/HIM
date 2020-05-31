@@ -22,7 +22,7 @@ class Application {
 public:
     Application() = delete;
 
-    Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width);
+    Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width, bool debug=false);
 
     static void init() {
         // glfw: initialize and configure
