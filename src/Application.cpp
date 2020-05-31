@@ -8,6 +8,8 @@ static string model_list[] = {"stone", "dirt", "bedrock"};
 
 Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width,
                          bool debug) {
+    this->debug = debug;
+
     // glfw window creation
     // --------------------
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -102,6 +104,11 @@ void Application::preRender() {
 void Application::render() {
     // render
     // ------
+    // update uav's position with the adventurer
+    if (!debug && adventurer_handle) {
+        camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
+    }
+
     // don't forget to enable shader before setting uniforms
     objShader->use();
     objShader->setInt("material.diffuse", 0);
@@ -244,7 +251,6 @@ void Application::processInput() {
         adventurer_handle = true;
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
-        camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
         camera_uav.locateTarget(camera_adventurer.position);
         adventurer_handle = false;
     }

@@ -79,6 +79,8 @@ private:
 
     int gameState;  // 0: free, 1: playing, 2: finished
 
+    bool debug;
+
     bool Application::reachReg(glm::vec3 cen1, glm::vec3 cen2);
 
     void processInput();
