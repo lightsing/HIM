@@ -5,6 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <limits>
+
+#include "maze.h"
 
 /* Utility Function Macros */
 #define MAX(a, b) ( ((a) > (b)) ? (a) : (b) )
@@ -40,7 +43,7 @@ enum class CameraMovement {
 // Speed
 #define SPEED_SLOW_DEFAULT		0.5f
 #define SPEED_NORMAL_DEFAULT	3.6f
-#define SPEED_FAST_DEFAULT		16.0f
+#define SPEED_FAST_DEFAULT		8.0f
 // FOV (Field of View) / ZOOM
 #define FOV_MIN_DEFAULT 1.0f
 #define FOV_MAX_DEFAULT 45.0f
@@ -137,34 +140,115 @@ public:
 
     /* Input Feedback */
     // Keyboard Event
-    void moveAround(CameraMovement dir, float deltaTime) {
+    void moveAround(CameraMovement dir, float deltaTime, const Maze* maze, double maze_blk_sz) {
         float velocity = speed * deltaTime;
-        if (dir == CameraMovement::FORWARD) {
-//            position += velocity * front;
-            position += velocity * glm::cross(worldUp, right);
+        if (dir == CameraMovement::UP) {
+            if (!fpv) {
+                position += velocity * worldUp;    // flying up, not straight above
+            }
         }
-        if (dir == CameraMovement::LEFT) {
-            position -= velocity * right;
+        else if (dir == CameraMovement::DOWN) {
+            if (!fpv) {
+                position -= velocity * worldUp; // flying down, not straight below
+            }
         }
-        if (dir == CameraMovement::BACKWARD) {
-//            position -= velocity * front;
-            position -= velocity * glm::cross(worldUp, right);
+        else {
+            glm::vec3 newPos = position;
+            if (dir == CameraMovement::FORWARD) {
+                newPos = position + velocity * glm::cross(worldUp, right);
+            }
+            if (dir == CameraMovement::LEFT) {
+                newPos = position - velocity * right;
+            }
+            if (dir == CameraMovement::BACKWARD) {
+                newPos = position - velocity * glm::cross(worldUp, right);
+            }
+            if (dir == CameraMovement::RIGHT) {
+                newPos = position + velocity * right;
+            }
+            glm::vec3 moveDir = glm::normalize(newPos - position);
+            position = fpv ? getMovedPos(maze, maze_blk_sz, moveDir, newPos, velocity): newPos;
         }
-        if (dir == CameraMovement::RIGHT) {
-            position += velocity * right;
-        }
-        if (dir == CameraMovement::UP && !fpv) {
-            position += velocity * worldUp;	// flying up, not straight above
-        }
-        if (dir == CameraMovement::DOWN && !fpv) {
-            position -= velocity * worldUp; // flying down, not straight below
-        }
-        // yaw/pitch has not changed, so no need to update
     }
+
+    // Compare good point distance with wished
+    glm::vec3 getMovedPos(const Maze* maze, double maze_blk_sz, glm::vec3 dir, glm::vec3 wishPos, float velocity) {
+        glm::vec3 goodP = collideIfAny(maze, maze_blk_sz, dir);
+        if (goodP.y < 0) {
+            // no collision
+            return wishPos;
+        }
+        // Collision!
+        double dist_collision = glm::distance(position, goodP);
+        double dist_wish = glm::distance(position, wishPos);
+//        printf("collision = %.3f, wish = %.3f\n", dist_collision, dist_wish);
+        return (dist_collision < dist_wish) ? goodP : wishPos;
+    }
+
+    // Collision Detection: returns good point
+    glm::vec3 collideIfAny(const Maze* maze, double maze_blk_sz, glm::vec3 dir) {
+        bool collided = false;
+        double tmin = std::numeric_limits<double>::max();
+//        int imin = 999, jmin = 999;
+        // A ray
+        glm::vec3 ray_orig(position.x, 0, position.z);
+        glm::vec3 ray_dir(dir.x, 0, dir.z); // only look in 2D dimension, to make searching faster
+        double goOut = -1.0;
+        // Search all cubes
+        for (int i = 0; i < maze->get_row_num(); ++i) {
+            for (int j = 0; j < maze->get_col_num(); ++j) {
+                if (!maze->isWall(i, j)) continue;
+                // A cube
+                glm::vec3 pmin(i * maze_blk_sz - maze_blk_sz / 2, -maze_blk_sz, j * maze_blk_sz - maze_blk_sz / 2);
+                glm::vec3 pmax(i * maze_blk_sz + maze_blk_sz / 2, maze_blk_sz, j * maze_blk_sz + maze_blk_sz / 2);
+                // If point is inside the cube, rollback
+                if (!(ray_orig.x < pmin.x || ray_orig.x > pmax.x ||
+                    ray_orig.y < pmin.y || ray_orig.y > pmax.y ||
+                    ray_orig.z < pmin.z || ray_orig.z > pmax.z)) {
+                    goOut = 1.0;
+                }
+                // Whether they collide? p + td = X --> t = (X - p) / d
+                double ts[6];
+                ts[0] = (pmin.x - ray_orig.x) / ray_dir.x;
+                ts[1] = (pmax.x - ray_orig.x) / ray_dir.x;
+                ts[2] = (pmin.y - ray_orig.y) / ray_dir.y;
+                ts[3] = (pmax.y - ray_orig.y) / ray_dir.y;
+                ts[4] = (pmin.z - ray_orig.z) / ray_dir.z;
+                ts[5] = (pmax.z - ray_orig.z) / ray_dir.z;
+                for (double tcur : ts) {
+                    // check if t is valid
+                    if (tcur < 0) continue;
+                    glm::vec3 res = ray_orig + ray_dir * (float)tcur;
+                    if (res.x < pmin.x || res.x > pmax.x ||
+                            res.y < pmin.y || res.y > pmax.y ||
+                            res.z < pmin.z || res.z > pmax.z) {
+                        // invalid
+                        continue;
+                    }
+                    // valid, find smallest
+                    collided = true;
+                    if (tcur < tmin) {
+                        tmin = tcur;
+//                        imin = i;
+//                        jmin = j;
+                    }
+                }
+            }
+        }
+        if (!collided) {
+            return glm::vec3(0, -10, 0);    // cannot collide underground
+        }
+        glm::vec3 crossPt = ray_orig + ray_dir * (float)(tmin + goOut * 0.32f);
+        crossPt.y = position.y;
+//        printf("Collide with (%d, %d)!\n", imin, jmin);
+        return crossPt;
+    }
+
     void changeSpeed(float _speed) {
         speed = _speed;
         // yaw/pitch has not changed, so no need to update
     }
+
     // Mouse Movement
     void lookAround(float deltaX, float deltaY, GLboolean constrainPitch = true) {
         deltaX *= sensitivity;
@@ -182,6 +266,7 @@ public:
         // yaw & pitch have changed, so update all the vectors
         updateCameraVectors();
     }
+
     // Mouse Scrolling
     void zoom(float yoffset) {
         // currently we only consider y-axis scrolling
@@ -204,6 +289,7 @@ private:
         newFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
         front = glm::normalize(newFront);
     }
+
     // Right Vector
     void updateRight() {
         // "right" is changed as soon as "front" is changed
@@ -211,6 +297,7 @@ private:
         //	"worldUp" to compute "right"
         right = glm::normalize(glm::cross(front, worldUp));
     }
+
     // Up Vector
     void updateUp() {
         // "up" is changed as soon as "front" is changed
@@ -218,6 +305,7 @@ private:
         //	"worldUp" to compute "right", then use "right" to compute "up"
         up = glm::normalize(glm::cross(right, front));
     }
+
     // Above is why everytime yaw/pitch changes, we need to update everything!
     void updateCameraVectors() {
         updateFront();

@@ -57,13 +57,13 @@ Application::Application(const char *title, int width, int height, int map_size,
     // initial camera positions
     adventurer_handle = true;
     camera_adventurer = Camera(
-            glm::vec3(-20.0f, 0.0f, 2.0f),
+            glm::vec3(2.0f, 1.85f, -20.0f),
             glm::vec3(0.0f, 1.0f, 0.0f),
             glm::vec3(0.0f, 0.0f, 0.0f),
             true
             );
     camera_uav = Camera(
-            camera_adventurer.position + glm::vec3(0, 10, 0),
+            camera_adventurer.position + glm::vec3(0, 12., 0),
             camera_adventurer.worldUp,
             camera_adventurer.position,
             false
@@ -108,18 +108,18 @@ void Application::render() {
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
-    for(int i = -map_sz; i < maze->get_col_num() + map_sz; ++i)
-        for(int j = -map_sz; j < maze->get_row_num() + map_sz; ++j) {
-            // render the loaded model
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model,
-                                   glm::vec3(i * 2., -4.f, j * 2.)); // translate it down so it's at the center of the scene
-            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
-            ourShader->setMat4("model", model);
-            models->at("bedrock").Draw(*ourShader);
-        }
-    for(int i = -map_sz; i < maze->get_col_num() + map_sz; ++i)
-        for(int j = -map_sz; j < maze->get_row_num() + map_sz; ++j) {
+//    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
+//        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
+//            // render the loaded model
+//            glm::mat4 model = glm::mat4(1.0f);
+//            model = glm::translate(model,
+//                                   glm::vec3(i * 2., -4.f, j * 2.)); // translate it down so it's at the center of the scene
+//            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+//            ourShader->setMat4("model", model);
+//            models->at("bedrock").Draw(*ourShader);
+//        }
+    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
+        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
             // render the loaded model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model,
@@ -128,8 +128,8 @@ void Application::render() {
             ourShader->setMat4("model", model);
             models->at("dirt").Draw(*ourShader);
         }
-    for(int i = 0; i < maze->get_col_num(); ++i)
-        for(int j = 0; j < maze->get_row_num(); ++j) {
+    for(int i = 0; i < maze->get_row_num(); ++i)
+        for(int j = 0; j < maze->get_col_num(); ++j) {
             if (!maze->isWall(i, j)) continue;
             for(int _ = 0; _ < 5; ++_) {
                 glm::mat4 model = glm::mat4(1.0f);
@@ -150,30 +150,47 @@ void Application::postRender() {
 }
 
 void Application::processInput() {
-    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    // close
+    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
+    }
+    // replay
+    if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS) {
+        camera_adventurer = Camera(
+                glm::vec3(2.0f, 1.85f, -20.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f),
+                glm::vec3(0.0f, 0.0f, 0.0f),
+                true
+        );
+        camera_uav = Camera(
+                camera_adventurer.position + glm::vec3(0, 12., 0),
+                camera_adventurer.worldUp,
+                camera_adventurer.position,
+                false
+        );
+    }
     // possible camera switching
     if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {
         adventurer_handle = true;
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
-        camera_uav.position = camera_adventurer.position + glm::vec3(0., 10., 0.);
+        camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
         camera_uav.locateTarget(camera_adventurer.position);
         adventurer_handle = false;
     }
     // keyboard movement
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::FORWARD, deltaTime);
+        camera->moveAround(CameraMovement::FORWARD, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::BACKWARD, deltaTime);
+        camera->moveAround(CameraMovement::BACKWARD, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::LEFT, deltaTime);
+        camera->moveAround(CameraMovement::LEFT, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::RIGHT, deltaTime);
+        camera->moveAround(CameraMovement::RIGHT, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::UP, deltaTime);
+        camera->moveAround(CameraMovement::UP, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera->moveAround(CameraMovement::DOWN, deltaTime);
+        camera->moveAround(CameraMovement::DOWN, deltaTime, maze, 2.);
     // change moving speed
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camera->changeSpeed(SPEED_FAST_DEFAULT);
