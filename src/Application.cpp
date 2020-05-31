@@ -110,12 +110,28 @@ void Application::render() {
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
-    if (gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
+    // Render adventurer
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(camera_adventurer.position.x, -0.7, camera_adventurer.position.z));
+    model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+    ourShader->setMat4("model", model);
+    Model characterBallAdv("res/ball.obj");
+    characterBallAdv.Draw(*ourShader);
+
+    // Render uav
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+    ourShader->setMat4("model", model);
+    Model characterBallUav("res/ball.obj");
+    characterBallUav.Draw(*ourShader);
+
+    if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
         // at start point
         gameState = 1;
         printf("Start playing now\n");
     }
-    else if (gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
+    else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
         // at end point
         gameState = 2;
         printf("Congratulations, you win!\n");

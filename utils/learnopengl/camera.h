@@ -73,7 +73,7 @@ public:
     float zNear = Z_NEAR_DEFAULT;	// Near Clipping Plane
     float zFar = Z_FAR_DEFAULT;		// Far Clipping Plane
 
-    bool fpv = true;    // First-Person View
+    bool isAdventurer = true;    // First-Person View
 
     /* Constructors */
     // Direct Customization on Yaw & Pitch Values
@@ -82,9 +82,9 @@ public:
             glm::vec3 _worldUp = WORLD_UP_DEFAULT,
             float _yaw = YAW_DEFAULT,
             float _pitch = PITCH_DEFAULT,
-            bool _fpv = true
+            bool _isAdventurer = true
     ) {
-        fpv = _fpv;
+        isAdventurer = _isAdventurer;
         position = _pos;
         worldUp = glm::normalize(_worldUp);
         yaw = _yaw;
@@ -96,22 +96,22 @@ public:
             float _worldUpX = WORLD_UP_DEFAULT.x, float _worldUpY = WORLD_UP_DEFAULT.y, float _worldUpZ = WORLD_UP_DEFAULT.z,
             float _yaw = YAW_DEFAULT,
             float _pitch = PITCH_DEFAULT,
-            bool _fpv = true
+            bool _isAdventurer = true
     ) : Camera(
             glm::vec3(_posX, _posY, _posZ),
             glm::normalize(glm::vec3(_worldUpX, _worldUpY, _worldUpZ)),
             _yaw,
             _pitch,
-            _fpv
+            _isAdventurer
     ) {}
     // Initial Focus On Certain Target
     Camera(
             glm::vec3 _pos = CAM_POS_DEFAULT,
             glm::vec3 _worldUp = WORLD_UP_DEFAULT,
             glm::vec3 _target = TARGET_POS_DEFAULT,
-            bool _fpv = true
+            bool _isAdventurer = true
     ) {
-        fpv = _fpv;
+        isAdventurer = _isAdventurer;
         position = _pos;
         worldUp = glm::normalize(_worldUp);
         locateTarget(_target);
@@ -143,12 +143,12 @@ public:
     void moveAround(CameraMovement dir, float deltaTime, const Maze* maze, double maze_blk_sz) {
         float velocity = speed * deltaTime;
         if (dir == CameraMovement::UP) {
-            if (!fpv) {
+            if (!isAdventurer) {
                 position += velocity * worldUp;    // flying up, not straight above
             }
         }
         else if (dir == CameraMovement::DOWN) {
-            if (!fpv) {
+            if (!isAdventurer) {
                 position -= velocity * worldUp; // flying down, not straight below
             }
         }
@@ -167,7 +167,7 @@ public:
                 newPos = position + velocity * right;
             }
             glm::vec3 moveDir = glm::normalize(newPos - position);
-            position = fpv ? getMovedPos(maze, maze_blk_sz, moveDir, newPos, velocity): newPos;
+            position = isAdventurer ? getMovedPos(maze, maze_blk_sz, moveDir, newPos, velocity) : newPos;
         }
     }
 
