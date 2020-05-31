@@ -75,6 +75,8 @@ private:
 
     Maze *maze;
 
+    bool startGame, finishGame;
+
     void processInput();
 
     void framebufferSizeCallback(int width, int height);

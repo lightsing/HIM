@@ -80,6 +80,8 @@ Application::Application(const char *title, int width, int height, int map_size,
     maze = new Maze(this->maze_len, this->maze_wid);
     maze->print_maze();
 
+    startGame = false;
+    finishGame = false;
 }
 
 void Application::preRender() {

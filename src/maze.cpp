@@ -96,3 +96,11 @@ int Maze::get_row_num() const {
 bool Maze::isWall(int i, int j) const {
     return maze_map[i+1][j+1] == 1;
 }
+
+glm::vec2 Maze::getStartPoint() {
+    return glm::vec2(1, 0);
+}
+
+glm::vec2 Maze::getEndPoint() {
+    return glm::vec2(get_row_num() - 2, get_col_num() - 1);
+}

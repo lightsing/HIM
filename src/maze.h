@@ -4,6 +4,9 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // 0 represent road, 1 represent wall
 // first, initialize the class
@@ -24,6 +27,8 @@ public:
     int get_row_num() const;
     int get_col_num() const;
     bool isWall(int i, int j) const;
+    glm::vec2 Maze::getStartPoint();
+    glm::vec2 Maze::getEndPoint();
 };
 
 #endif //HIM_MAZE_H

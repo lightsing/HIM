@@ -189,7 +189,7 @@ public:
     glm::vec3 collideIfAny(const Maze* maze, double maze_blk_sz, glm::vec3 dir) {
         bool collided = false;
         double tmin = std::numeric_limits<double>::max();
-//        int imin = 999, jmin = 999;
+        int imin = 999, jmin = 999;
         // A ray
         glm::vec3 ray_orig(position.x, 0, position.z);
         glm::vec3 ray_dir(dir.x, 0, dir.z); // only look in 2D dimension, to make searching faster
@@ -229,8 +229,8 @@ public:
                     collided = true;
                     if (tcur < tmin) {
                         tmin = tcur;
-//                        imin = i;
-//                        jmin = j;
+                        imin = i;
+                        jmin = j;
                     }
                 }
             }
@@ -240,7 +240,7 @@ public:
         }
         glm::vec3 crossPt = ray_orig + ray_dir * (float)(tmin + goOut * 0.32f);
         crossPt.y = position.y;
-//        printf("Collide with (%d, %d)!\n", imin, jmin);
+        printf("Pointing at (%d, %d)!\n", imin, jmin);
         return crossPt;
     }
 
