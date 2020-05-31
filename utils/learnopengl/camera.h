@@ -199,8 +199,9 @@ public:
             for (int j = 0; j < maze->get_col_num(); ++j) {
                 if (!maze->isWall(i, j)) continue;
                 // A cube
-                glm::vec3 pmin(i * maze_blk_sz - maze_blk_sz / 2, -maze_blk_sz, j * maze_blk_sz - maze_blk_sz / 2);
-                glm::vec3 pmax(i * maze_blk_sz + maze_blk_sz / 2, maze_blk_sz, j * maze_blk_sz + maze_blk_sz / 2);
+                double half_maze_blk_sz = maze_blk_sz / 2;
+                glm::vec3 pmin(i * maze_blk_sz - half_maze_blk_sz, -half_maze_blk_sz, j * maze_blk_sz - half_maze_blk_sz);
+                glm::vec3 pmax(i * maze_blk_sz + half_maze_blk_sz, half_maze_blk_sz, j * maze_blk_sz + half_maze_blk_sz);
                 // If point is inside the cube, rollback
                 if (!(ray_orig.x < pmin.x || ray_orig.x > pmax.x ||
                     ray_orig.y < pmin.y || ray_orig.y > pmax.y ||
@@ -240,8 +241,62 @@ public:
         }
         glm::vec3 crossPt = ray_orig + ray_dir * (float)(tmin + goOut * 0.32f);
         crossPt.y = position.y;
-        printf("Pointing at (%d, %d)!\n", imin, jmin);
+//        printf("Pointing at (%d, %d)!\n", imin, jmin);
         return crossPt;
+    }
+
+    // Retrieve the maze block pointed at
+    int* getPointAt(const Maze* maze, double maze_blk_sz) {
+        bool collided = false;
+        double tmin = std::numeric_limits<double>::max();
+        int collPt[3] = {-999, -999, -999};
+        // A ray
+        glm::vec3 ray_orig = position;
+        glm::vec3 ray_dir = front;
+        // Search all cubes
+        for (int i = 0; i < maze->get_row_num(); ++i) {
+            for (int j = 0; j < maze->get_col_num(); ++j) {
+                for (int _ = 0; _ < 5; ++_) {
+                    if (!maze->isWall(i, j)) continue;
+                    // A cube
+                    double half_maze_blk_sz = maze_blk_sz / 2;
+                    glm::vec3 pmin(i * maze_blk_sz - half_maze_blk_sz, maze_blk_sz * _ - half_maze_blk_sz, j * maze_blk_sz - half_maze_blk_sz);
+                    glm::vec3 pmax(i * maze_blk_sz + half_maze_blk_sz, maze_blk_sz * _ + half_maze_blk_sz, j * maze_blk_sz + half_maze_blk_sz);
+                    // Whether they collide? p + td = X --> t = (X - p) / d
+                    double ts[6];
+                    ts[0] = (pmin.x - ray_orig.x) / ray_dir.x;
+                    ts[1] = (pmax.x - ray_orig.x) / ray_dir.x;
+                    ts[2] = (pmin.y - ray_orig.y) / ray_dir.y;
+                    ts[3] = (pmax.y - ray_orig.y) / ray_dir.y;
+                    ts[4] = (pmin.z - ray_orig.z) / ray_dir.z;
+                    ts[5] = (pmax.z - ray_orig.z) / ray_dir.z;
+                    for (double tcur : ts) {
+                        // check if t is valid
+                        if (tcur < 0) continue;
+                        glm::vec3 res = ray_orig + ray_dir * (float)tcur;
+                        if (res.x < pmin.x || res.x > pmax.x ||
+                            res.y < pmin.y || res.y > pmax.y ||
+                            res.z < pmin.z || res.z > pmax.z) {
+                            // invalid
+                            continue;
+                        }
+                        // valid, find smallest
+                        collided = true;
+                        if (tcur < tmin) {
+                            tmin = tcur;
+                            collPt[0] = i;
+                            collPt[1] = _;
+                            collPt[2] = j;
+                        }
+                    }
+                }
+            }
+        }
+        if (!collided) {
+            return new int[3]{0, -10, 0};    // no collision
+        }
+//        printf("Pointing at (%d, %d, %d)!\n", collPt[0], collPt[1], collPt[2]);
+        return new int[3]{collPt[0], collPt[1], collPt[2]};
     }
 
     void changeSpeed(float _speed) {

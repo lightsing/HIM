@@ -21,14 +21,17 @@ private:
     void make_maze();
     int searchPath(int, int);
 public:
+    glm::vec2 start;
+    glm::vec2 end;
+
     Maze(int, int);
     int **get_maze() const;
     void print_maze() const;
     int get_row_num() const;
     int get_col_num() const;
     bool isWall(int i, int j) const;
-    glm::vec2 Maze::getStartPoint();
-    glm::vec2 Maze::getEndPoint();
+    glm::vec3 Maze::getStartPoint(double);
+    glm::vec3 Maze::getEndPoint(double);
 };
 
 #endif //HIM_MAZE_H

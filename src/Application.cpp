@@ -28,6 +28,7 @@ Application::Application(const char *title, int width, int height, int map_size,
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -80,8 +81,7 @@ Application::Application(const char *title, int width, int height, int map_size,
     maze = new Maze(this->maze_len, this->maze_wid);
     maze->print_maze();
 
-    startGame = false;
-    finishGame = false;
+    gameState = 0;
 }
 
 void Application::preRender() {
@@ -110,6 +110,17 @@ void Application::render() {
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
+    if (gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
+        // at start point
+        gameState = 1;
+        printf("Start playing now\n");
+    }
+    else if (gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
+        // at end point
+        gameState = 2;
+        printf("Congratulations, you win!\n");
+    }
+
 //    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
 //        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
 //            // render the loaded model
@@ -128,8 +139,13 @@ void Application::render() {
                                    glm::vec3(i * 2., -2.f, j * 2.));
             model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
             ourShader->setMat4("model", model);
-            models->at("dirt").Draw(*ourShader);
+            models->at(((gameState == 1 && maze->start.x == i && maze->start.y == j) ||
+                (gameState == 2 && maze->end.x == i && maze->end.y == j))
+                ? "bedrock" : "dirt").Draw(*ourShader);
         }
+
+    int* curPointAt = camera->getPointAt(maze, 2.);
+
     for(int i = 0; i < maze->get_row_num(); ++i)
         for(int j = 0; j < maze->get_col_num(); ++j) {
             if (!maze->isWall(i, j)) continue;
@@ -139,7 +155,8 @@ void Application::render() {
                                        glm::vec3(i * 2., _ * 2., j * 2.));
                 model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
                 ourShader->setMat4("model", model);
-                models->at("stone").Draw(*ourShader);
+                models->at((curPointAt[1] >= 0 && curPointAt[0] == i && curPointAt[1] == _ && curPointAt[2] == j)
+                    ? "bedrock" : "stone").Draw(*ourShader);
             }
         }
 
@@ -149,6 +166,11 @@ void Application::postRender() {
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     glfwSwapBuffers(m_window);
     glfwPollEvents();
+}
+
+bool Application::reachReg(glm::vec3 cen1, glm::vec3 cen2) {
+    return abs(cen1.x - cen2.x) < 1. &&
+           abs(cen1.z - cen2.z) < 1.;
 }
 
 void Application::processInput() {
@@ -170,6 +192,7 @@ void Application::processInput() {
                 camera_adventurer.position,
                 false
         );
+        gameState = 0;
     }
     // possible camera switching
     if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {

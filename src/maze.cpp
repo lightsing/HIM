@@ -14,6 +14,9 @@ Maze::Maze(int num_of_row, int num_of_col) {
         this->maze_map[i] = new int[2 * col + 4];
     }
     this->make_maze();
+
+    this->start = glm::vec2(1, 0);
+    this->end =glm::vec2(get_row_num() - 2, get_col_num() - 1);
 }
 
 void Maze::make_maze() {
@@ -97,10 +100,10 @@ bool Maze::isWall(int i, int j) const {
     return maze_map[i+1][j+1] == 1;
 }
 
-glm::vec2 Maze::getStartPoint() {
-    return glm::vec2(1, 0);
+glm::vec3 Maze::getStartPoint(double len) {
+    return glm::vec3(start.x * len, 0, start.y * len);
 }
 
-glm::vec2 Maze::getEndPoint() {
-    return glm::vec2(get_row_num() - 2, get_col_num() - 1);
+glm::vec3 Maze::getEndPoint(double len) {
+    return glm::vec3(end.x * len, 0, end.y * len);
 }
