@@ -60,6 +60,7 @@ Application::Application(const char *title, int width, int height, int map_size,
 
     // initial camera positions
     adventurer_handle = true;
+    bindAdventurer = true;
     camera_adventurer = Camera(
             glm::vec3(2.0f, 1.85f, -20.0f),
             glm::vec3(0.0f, 1.0f, 0.0f),
@@ -105,7 +106,7 @@ void Application::render() {
     // render
     // ------
     // update uav's position with the adventurer
-    if (!debug && adventurer_handle) {
+    if (!debug && adventurer_handle && bindAdventurer) {
         camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
     }
 
@@ -196,13 +197,6 @@ void Application::render() {
     lightCubeShader->setMat4("projection", projection);
     lightCubeShader->setMat4("view", view);
 
-//    model = glm::mat4(1.0f);
-//    model = glm::translate(model, lightPos);
-//    model = glm::scale(model, glm::vec3(0.2f));
-//    lightCubeShader->setMat4("model", model);
-//
-//    models->at("bedrock").Draw(*lightCubeShader);
-
     // Render uav
     model = glm::mat4(1.0f);
     model = glm::translate(model,
@@ -245,6 +239,10 @@ void Application::processInput() {
                 false
         );
         gameState = 0;
+    }
+    // Binding option
+    if (glfwGetKey(m_window, GLFW_KEY_B) == GLFW_PRESS) {
+        bindAdventurer = (bindAdventurer) ? false : true;
     }
     // possible camera switching
     if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {

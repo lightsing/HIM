@@ -66,6 +66,7 @@ private:
     int maze_len, maze_wid;
 
     bool adventurer_handle = true;
+    bool bindAdventurer = true;
     Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
     Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
     Camera *camera;
