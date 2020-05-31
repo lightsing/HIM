@@ -22,7 +22,8 @@ class Application {
 public:
     Application() = delete;
 
-    Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width, bool debug=false);
+    Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width,
+                bool debug = false);
 
     static void init() {
         // glfw: initialize and configure
@@ -67,9 +68,10 @@ private:
     bool adventurer_handle = true;
     Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
     Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
-    Camera* camera;
+    Camera *camera;
 
-    Shader *ourShader;
+//    Shader *ourShader;
+    Shader *lightCubeShader, *objShader;
 
     map<string, Model> *models;
 
