@@ -6,10 +6,11 @@
 
 static string model_list[] = { "stone", "dirt", "bedrock" };
 
-Application::Application(const char *title, int width, int height) {
+Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width) {
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(width, height, title, glfwGetPrimaryMonitor(), nullptr);
+//    GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);    // for debug
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -39,21 +40,41 @@ Application::Application(const char *title, int width, int height) {
     m_window = window;
     this->width = width;
     this->height = height;
+
     lastX = width / 2.f;
     lastY = height / 2.f;
     deltaTime = 0.f;
     lastFrame = 0.f;
-    camera = Camera(
-            glm::vec3(4.0f, 3.0f, 3.0f),
+
+    map_sz = map_size;
+
+    maze_len = maze_length;
+    maze_wid = maze_width;
+
+    // initial camera positions
+    adventurer_handle = true;
+    camera_adventurer = Camera(
+            glm::vec3(-20.0f, 0.0f, 2.0f),
             glm::vec3(0.0f, 1.0f, 0.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f)
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            true
             );
+    camera_uav = Camera(
+            camera_adventurer.position + glm::vec3(0, 10, 0),
+            camera_adventurer.worldUp,
+            camera_adventurer.position,
+            false
+            );
+    camera = &camera_adventurer;
+
     ourShader = new Shader("res/shader.vs", "res/shader.fs");
+
+    // Store the maze
     models = new map<string, Model>;
     for(const string& key : model_list) {
         models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
     }
-    maze = new Maze(17, 19);
+    maze = new Maze(this->maze_len, this->maze_wid);
     maze->print_maze();
 
 }
@@ -66,7 +87,7 @@ void Application::preRender() {
 
     processInput(); // input
 
-    glClearColor(1.f, 1.f, 1.f, 1.f);
+    glClearColor(.0f, .0f, .0f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -77,40 +98,41 @@ void Application::render() {
     ourShader->use();
 
     // view/projection transformations
-    glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float) width / (float) height,
-                                            camera.zNear, camera.zFar);
-    glm::mat4 view = camera.getViewMatrix();
+    camera = adventurer_handle ? &camera_adventurer : &camera_uav;
+    glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float) width / (float) height,
+                                            camera->zNear, camera->zFar);
+    glm::mat4 view = camera->getViewMatrix();
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", view);
 
-    for(int i = -10; i < maze->get_col_num() + 10; ++i)
-        for(int j = -10; j < maze->get_row_num() + 10; ++j) {
+    for(int i = -map_sz; i < maze->get_col_num() + map_sz; ++i)
+        for(int j = -map_sz; j < maze->get_row_num() + map_sz; ++j) {
             // render the loaded model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model,
-                                   glm::vec3(i * 2., .0f, j * 2.)); // translate it down so it's at the center of the scene
+                                   glm::vec3(i * 2., -4.f, j * 2.)); // translate it down so it's at the center of the scene
             model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
             ourShader->setMat4("model", model);
             models->at("bedrock").Draw(*ourShader);
         }
-    for(int i = -10; i < maze->get_col_num() + 10; ++i)
-        for(int j = -10; j < maze->get_row_num() + 10; ++j) {
+    for(int i = -map_sz; i < maze->get_col_num() + map_sz; ++i)
+        for(int j = -map_sz; j < maze->get_row_num() + map_sz; ++j) {
             // render the loaded model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model,
-                                   glm::vec3(i * 2., 2.f, j * 2.)); // translate it down so it's at the center of the scene
-            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+                                   glm::vec3(i * 2., -2.f, j * 2.));
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
             ourShader->setMat4("model", model);
             models->at("dirt").Draw(*ourShader);
         }
     for(int i = 0; i < maze->get_col_num(); ++i)
         for(int j = 0; j < maze->get_row_num(); ++j) {
             if (!maze->isWall(i, j)) continue;
-            for(int _ = 2; _ < 6; ++_) {
+            for(int _ = 0; _ < 5; ++_) {
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model,
-                                       glm::vec3(i * 2., _ * 2., j * 2.)); // translate it down so it's at the center of the scene
-                model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));    // it's a bit too big for our scene, so scale it down
+                                       glm::vec3(i * 2., _ * 2., j * 2.));
+                model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
                 ourShader->setMat4("model", model);
                 models->at("stone").Draw(*ourShader);
             }
@@ -127,24 +149,33 @@ void Application::postRender() {
 void Application::processInput() {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(m_window, true);
+    // possible camera switching
+    if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {
+        adventurer_handle = true;
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
+        camera_uav.position = camera_adventurer.position + glm::vec3(0., 10., 0.);
+        camera_uav.locateTarget(camera_adventurer.position);
+        adventurer_handle = false;
+    }
     // keyboard movement
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::FORWARD, deltaTime);
+        camera->moveAround(CameraMovement::FORWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::BACKWARD, deltaTime);
+        camera->moveAround(CameraMovement::BACKWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::LEFT, deltaTime);
+        camera->moveAround(CameraMovement::LEFT, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::RIGHT, deltaTime);
+        camera->moveAround(CameraMovement::RIGHT, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::UP, deltaTime);
+        camera->moveAround(CameraMovement::UP, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.moveAround(CameraMovement::DOWN, deltaTime);
+        camera->moveAround(CameraMovement::DOWN, deltaTime);
     // change moving speed
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        camera.changeSpeed(SPEED_FAST_DEFAULT);
+        camera->changeSpeed(SPEED_FAST_DEFAULT);
     else {
-        camera.changeSpeed(SPEED_NORMAL_DEFAULT);
+        camera->changeSpeed(SPEED_NORMAL_DEFAULT);
     }
 }
 
@@ -161,7 +192,7 @@ void Application::mouseCallback(double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    camera.lookAround(xoffset, yoffset);
+    this->camera->lookAround(xoffset, yoffset);
 }
 
 void Application::keyboardCallback(int key, int scancode, int action, int mods) {
@@ -170,7 +201,7 @@ void Application::keyboardCallback(int key, int scancode, int action, int mods) 
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void Application::scrollCallback(double xoffset, double yoffset) {
-    camera.zoom(yoffset);
+    camera->zoom(yoffset);
 }
 
 void Application::framebufferSizeCallback(int width, int height) {

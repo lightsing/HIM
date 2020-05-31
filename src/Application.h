@@ -22,7 +22,7 @@ class Application {
 public:
     Application() = delete;
 
-    Application(const char *title, int width, int height);
+    Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width);
 
     static void init() {
         // glfw: initialize and configure
@@ -55,12 +55,24 @@ public:
 private:
     GLFWwindow *m_window;
     int width, height;
+
     float lastX, lastY;
     float deltaTime, lastFrame;
     bool firstMouse = true;
-    Camera camera = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT);
+
+    int map_sz;
+
+    int maze_len, maze_wid;
+
+    bool adventurer_handle = true;
+    Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
+    Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
+    Camera* camera;
+
     Shader *ourShader;
+
     map<string, Model> *models;
+
     Maze *maze;
 
     void processInput();

@@ -70,14 +70,18 @@ public:
     float zNear = Z_NEAR_DEFAULT;	// Near Clipping Plane
     float zFar = Z_FAR_DEFAULT;		// Far Clipping Plane
 
+    bool fpv = true;    // First-Person View
+
     /* Constructors */
     // Direct Customization on Yaw & Pitch Values
     Camera(	// with vectors
             glm::vec3 _pos = CAM_POS_DEFAULT,
             glm::vec3 _worldUp = WORLD_UP_DEFAULT,
             float _yaw = YAW_DEFAULT,
-            float _pitch = PITCH_DEFAULT
+            float _pitch = PITCH_DEFAULT,
+            bool _fpv = true
     ) {
+        fpv = _fpv;
         position = _pos;
         worldUp = glm::normalize(_worldUp);
         yaw = _yaw;
@@ -88,23 +92,26 @@ public:
             float _posX = CAM_POS_DEFAULT.x, float _posY = CAM_POS_DEFAULT.y, float _posZ = CAM_POS_DEFAULT.z,
             float _worldUpX = WORLD_UP_DEFAULT.x, float _worldUpY = WORLD_UP_DEFAULT.y, float _worldUpZ = WORLD_UP_DEFAULT.z,
             float _yaw = YAW_DEFAULT,
-            float _pitch = PITCH_DEFAULT
+            float _pitch = PITCH_DEFAULT,
+            bool _fpv = true
     ) : Camera(
             glm::vec3(_posX, _posY, _posZ),
             glm::normalize(glm::vec3(_worldUpX, _worldUpY, _worldUpZ)),
             _yaw,
-            _pitch
+            _pitch,
+            _fpv
     ) {}
     // Initial Focus On Certain Target
     Camera(
             glm::vec3 _pos = CAM_POS_DEFAULT,
             glm::vec3 _worldUp = WORLD_UP_DEFAULT,
-            glm::vec3 _target = TARGET_POS_DEFAULT
+            glm::vec3 _target = TARGET_POS_DEFAULT,
+            bool _fpv = true
     ) {
+        fpv = _fpv;
         position = _pos;
         worldUp = glm::normalize(_worldUp);
         locateTarget(_target);
-        updateCameraVectors();	// yaw & pitch have changed, so update all vectors
     }
 
     /* Utility Functions */
@@ -121,6 +128,7 @@ public:
         glm::vec3 camFront_unit = glm::normalize(_target - position);
         pitch = glm::degrees( asin(camFront_unit.y) );
         yaw = glm::degrees( atan2(camFront_unit.z, camFront_unit.x) );
+        updateCameraVectors();	// yaw & pitch have changed, so update all vectors
     }
     void locateTarget(float _targetX, float _targetY, float _targetZ) {
         glm::vec3 _target(_targetX, _targetY, _targetZ);
@@ -145,10 +153,10 @@ public:
         if (dir == CameraMovement::RIGHT) {
             position += velocity * right;
         }
-        if (dir == CameraMovement::UP) {
+        if (dir == CameraMovement::UP && !fpv) {
             position += velocity * worldUp;	// flying up, not straight above
         }
-        if (dir == CameraMovement::DOWN) {
+        if (dir == CameraMovement::DOWN && !fpv) {
             position -= velocity * worldUp; // flying down, not straight below
         }
         // yaw/pitch has not changed, so no need to update
