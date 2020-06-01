@@ -46,6 +46,8 @@ public:
 #endif
     }
 
+    void init(int map_size, int maze_length, int maze_width);
+
     void preRender();
 
     void render();
@@ -96,6 +98,9 @@ private:
 
     FreeType *freeType;
 
+    int gameLevel = 1;
+    double levelTime = 0.0;
+
     double startTime = 0.0;
     double endTime = 0.0;
     double gameTime = 0.0;
@@ -112,6 +117,7 @@ private:
 
     bool debug;
     bool shadows = true;
+    bool winOrNot = false;
 
     bool reachReg(glm::vec3 cen1, glm::vec3 cen2);
 

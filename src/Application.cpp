@@ -10,6 +10,7 @@ static float font_size = 48;
 
 Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width,
                          bool debug) {
+
     this->debug = debug;
 
     // glfw window creation
@@ -19,6 +20,7 @@ Application::Application(const char *title, int width, int height, int map_size,
         monitor = nullptr;
     }
     GLFWwindow *window = glfwCreateWindow(width, height, title, monitor, nullptr);
+
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -39,9 +41,6 @@ Application::Application(const char *title, int width, int height, int map_size,
         exit(-1);
     }
 
-    // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-//    stbi_set_flip_vertically_on_load(true);
-
     // configure global openGL state
     glEnable(GL_DEPTH_TEST);
 
@@ -55,6 +54,12 @@ Application::Application(const char *title, int width, int height, int map_size,
     lastY = height / 2.f;
     deltaTime = 0.f;
     lastFrame = 0.f;
+
+    init(map_size, maze_length, maze_width);
+}
+
+void Application::init(int map_size, int maze_length, int maze_width) {
+    this->winOrNot = false;
 
     map_sz = map_size;
 
@@ -196,6 +201,7 @@ void Application::preRender() {
         // at end point
         gameState = 2;
         endTime = glfwGetTime();
+        winOrNot = true;
 //        printf("Congratulations, you win!\n");    // just for debugging
     }
 
@@ -315,6 +321,12 @@ void Application::render() {
     if (gameState == 2 && glfwGetTime() - endTime <= 3) {
         freeType->renderText("you win", width / 2 - 300, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
+    std::stringstream ss_level;
+    ss_level << "level " << (int) gameLevel;
+
+    if (glfwGetTime() - levelTime <= 3) {
+        freeType->renderText(ss_level.str(), width / 2 - 300, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
 }
 
 void Application::renderObject(Shader *shader) {
@@ -394,6 +406,15 @@ void Application::processInput() {
     }
     // replay
     if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS) {
+        if (winOrNot) {
+            maze_len += 2;
+            maze_wid += 2;
+            gameLevel++;
+        }
+
+        levelTime = glfwGetTime();
+        init(map_sz, maze_len, maze_wid);
+
         camera_adventurer = Camera(
                 glm::vec3(2.0f, 1.85f, -20.0f),
                 glm::vec3(0.0f, 1.0f, 0.0f),
