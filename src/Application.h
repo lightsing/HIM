@@ -18,6 +18,13 @@
 
 #include "maze.h"
 
+struct CubeModel {
+    string type;
+    glm::vec3 position;
+    glm::mat4 model;
+    glm::mat3 model_res;
+};
+
 class Application {
 public:
     Application() = delete;
@@ -41,6 +48,10 @@ public:
 
     void render();
 
+    void renderObject(Shader *);
+
+    void renderLight(glm::vec3);
+
     void postRender();
 
     bool shouldClose() { return glfwWindowShouldClose(m_window); }
@@ -54,6 +65,9 @@ public:
     }
 
 private:
+    CubeModel **floor_model;
+    CubeModel ***wall_model;
+
     GLFWwindow *m_window;
     int width, height;
 
@@ -117,4 +131,5 @@ private:
     private:
         static Application *s_application;
     };
+
 };

@@ -88,6 +88,49 @@ Application::Application(const char *title, int width, int height, int map_size,
     maze->print_maze();
 
     gameState = 0;
+
+    floor_model = new CubeModel *[maze->get_row_num() + 2 * map_sz];
+    for (int i = 0; i < maze->get_row_num() + 2 * map_sz; ++i) {
+        floor_model[i] = new CubeModel[maze->get_col_num() + 2 * map_sz];
+    }
+
+    for (int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
+        for (int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
+            // render the loaded model
+            floor_model[i + map_sz][j + map_sz].position = glm::vec3(i * 2., -2.f, j * 2.);
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, floor_model[i + map_sz][j + map_sz].position);
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+            floor_model[i + map_sz][j + map_sz].model = model;
+            floor_model[i + map_sz][j + map_sz].model_res = glm::mat3(glm::transpose(glm::inverse(model)));
+            floor_model[i + map_sz][j + map_sz].type = "dirt";
+        }
+
+    wall_model = new CubeModel **[maze->get_row_num()];
+    for (int i = 0; i < maze->get_row_num(); ++i) {
+        wall_model[i] = new CubeModel *[maze->get_col_num()];
+        for (int j = 0; j < maze->get_col_num(); ++j) {
+            wall_model[i][j] = new CubeModel[5];
+        }
+    }
+
+    for (int i = 0; i < maze->get_row_num(); ++i)
+        for (int j = 0; j < maze->get_col_num(); ++j) {
+            if (!maze->isWall(i, j)) continue;
+            for (int _ = 0; _ < 5; ++_) {
+                wall_model[i][j][_].type = "stone";
+                wall_model[i][j][_].position = glm::vec3(i * 2., _ * 2., j * 2.);
+
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, wall_model[i][j][_].position);
+                model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+                wall_model[i][j][_].model = model;
+                wall_model[i][j][_].model_res = glm::mat3(glm::transpose(glm::inverse(model)));
+            }
+        }
 }
 
 void Application::preRender() {
@@ -100,27 +143,35 @@ void Application::preRender() {
 
     glClearColor(.0f, .0f, .0f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
 
-void Application::render() {
-    // render
-    // ------
     // update uav's position with the adventurer
     if (!debug && adventurer_handle && bindAdventurer) {
         camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
     }
+    camera = adventurer_handle ? &camera_adventurer : &camera_uav;
+
+    if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
+        // at start point
+        gameState = 1;
+        printf("Start playing now\n");
+    } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
+        // at end point
+        gameState = 2;
+        printf("Congratulations, you win!\n");
+    }
+}
+
+void Application::render() {
+//    // view/projection transformations
+    glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float) width / (float) height,
+                                            camera->zNear, camera->zFar);
+    glm::mat4 view = camera->getViewMatrix();
+    glm::vec3 lightPos(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z);
 
     // don't forget to enable shader before setting uniforms
     objShader->use();
     objShader->setInt("material.diffuse", 0);
     objShader->setInt("material.specular", 1);
-
-    // view/projection transformations
-    camera = adventurer_handle ? &camera_adventurer : &camera_uav;
-    glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float) width / (float) height,
-                                            camera->zNear, camera->zFar);
-    glm::mat4 view = camera->getViewMatrix();
-    glm::vec3 lightPos(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z);
 
     objShader->setVec3("lights[0].position", lightPos);
     objShader->setVec3("lights[0].ambient", 0.3f, 0.3f, 0.3f);
@@ -136,24 +187,27 @@ void Application::render() {
     objShader->setMat4("projection", projection);
     objShader->setMat4("view", view);
 
+    renderObject(objShader);
+
+    lightCubeShader->use();
+    lightCubeShader->setMat4("projection", projection);
+    lightCubeShader->setMat4("view", view);
+
+    renderLight(lightPos);
+}
+
+void Application::renderObject(Shader *shader) {
+    // render
+    // ------
+
     // Render adventurer
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(camera_adventurer.position.x, -0.7, camera_adventurer.position.z));
     model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-    objShader->setMat4("model", model);
-    objShader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
+    shader->setMat4("model", model);
+    shader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
     Model characterBallAdv("res/ball.obj");
-    characterBallAdv.Draw(*objShader);
-
-    if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
-        // at start point
-        gameState = 1;
-        printf("Start playing now\n");
-    } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
-        // at end point
-        gameState = 2;
-        printf("Congratulations, you win!\n");
-    }
+    characterBallAdv.Draw(*shader);
 
 //    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
 //        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
@@ -165,18 +219,16 @@ void Application::render() {
 //            ourShader->setMat4("model", model);
 //            models->at("bedrock").Draw(*ourShader);
 //        }
-    for (int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
-        for (int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
+
+    for (int i = 0; i < maze->get_row_num() + 2 * map_sz; ++i)
+        for (int j = 0; j < maze->get_col_num() + 2 * map_sz; ++j) {
             // render the loaded model
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model,
-                                   glm::vec3(i * 2., -2.f, j * 2.));
-            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-            objShader->setMat4("model", model);
-            objShader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
-            models->at(((gameState == 1 && maze->start.x == i && maze->start.y == j) ||
-                        (gameState == 2 && maze->end.x == i && maze->end.y == j))
-                       ? "bedrock" : "dirt").Draw(*objShader);
+            shader->setMat4("model", floor_model[i][j].model);
+            shader->setMat3("model_res", floor_model[i][j].model_res);
+            floor_model[i][j].type = ((gameState == 1 && maze->start.x == i - map_sz && maze->start.y == j - map_sz) ||
+                                      (gameState == 2 && maze->end.x == i - map_sz && maze->end.y == j - map_sz))
+                                     ? "bedrock" : "dirt";
+            models->at(floor_model[i][j].type).Draw(*shader);
         }
 
     int *curPointAt = camera->getPointAt(maze, 2.);
@@ -185,30 +237,25 @@ void Application::render() {
         for (int j = 0; j < maze->get_col_num(); ++j) {
             if (!maze->isWall(i, j)) continue;
             for (int _ = 0; _ < 5; ++_) {
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model,
-                                       glm::vec3(i * 2., _ * 2., j * 2.));
-                model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-                objShader->setMat4("model", model);
-                objShader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
-                models->at((curPointAt[1] >= 0 && curPointAt[0] == i && curPointAt[1] == _ && curPointAt[2] == j)
-                           ? "bedrock" : "stone").Draw(*objShader);
+                shader->setMat4("model", wall_model[i][j][_].model);
+                shader->setMat3("model_res", wall_model[i][j][_].model_res);
+                wall_model[i][j][_].type = (curPointAt[1] >= 0 && curPointAt[0] == i && curPointAt[1] == _ &&
+                                            curPointAt[2] == j)
+                                           ? "bedrock" : "stone";
+                models->at(wall_model[i][j][_].type).Draw(*shader);
             }
         }
+}
 
-    lightCubeShader->use();
-    lightCubeShader->setMat4("projection", projection);
-    lightCubeShader->setMat4("view", view);
-
+void Application::renderLight(glm::vec3 lightPos) {
     // Render uav
-    model = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model,
-                           glm::vec3(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z));
+                           lightPos);
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     lightCubeShader->setMat4("model", model);
     Model characterBallUav("res/ball.obj");
     characterBallUav.Draw(*lightCubeShader);
-
 }
 
 void Application::postRender() {
