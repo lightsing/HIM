@@ -91,6 +91,9 @@ private:
 
     FreeType *freeType;
 
+    double startTime = 0.0;
+    double gameTime = 0.0;
+
 //    Shader *ourShader;
     Shader *lightCubeShader, *objShader;
 

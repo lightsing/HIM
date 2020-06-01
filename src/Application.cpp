@@ -5,6 +5,8 @@
 #include "Application.h"
 
 static string model_list[] = {"stone", "dirt", "bedrock"};
+static string gamestates[] = {"free", "start", "finish"};
+static float font_size = 48;
 
 Application::Application(const char *title, int width, int height, int map_size, int maze_length, int maze_width,
                          bool debug) {
@@ -159,11 +161,16 @@ void Application::preRender() {
     if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
         // at start point
         gameState = 1;
+        startTime = glfwGetTime();
         printf("Start playing now\n");
     } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
         // at end point
         gameState = 2;
         printf("Congratulations, you win!\n");
+    }
+
+    if (gameState == 1) {
+        gameTime = glfwGetTime() - startTime;
     }
 }
 
@@ -201,14 +208,20 @@ void Application::render() {
 
     renderLight(lightPos);
 
+    // Render Messages
     freeType->use();
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     freeType->setMat4("projection", projection);
-    std::stringstream ss;
-    ss << (int)(1.0f / deltaTime) << " FPS";
-    freeType->renderText("happy", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-    freeType->renderText(ss.str(), 25.0f, height - 49.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
-    freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3, 0.7f, 0.9f));   // render cursor
+    std::stringstream ss_fps;
+    ss_fps << (int)(1.0f / deltaTime) << " FPS";
+    freeType->renderText(ss_fps.str(), 25.0f, height - 49.0f, 0.5f, glm::vec3(0.8f, 0.8f, 0.2f));
+    freeType->renderText(gamestates[gameState], 25.0f, 25.0f, 1.0f, glm::vec3(0.5f, 0.8f, 0.2f));
+
+    std::stringstream ss_time;
+    ss_time << "time " << (int)gameTime;
+    freeType->renderText(ss_time.str(), width / 2 - 144, 25.0f, 0.8f, glm::vec3(0.2f, 0.8f, 0.8f));
+
+    freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3f, 0.7f, 0.9f));   // render cursor
 }
 
 void Application::renderObject(Shader *shader) {
@@ -301,6 +314,8 @@ void Application::processInput() {
                 false
         );
         gameState = 0;
+        startTime = 0;
+        gameTime = 0;
     }
     // Binding option
     if (glfwGetKey(m_window, GLFW_KEY_B) == GLFW_PRESS) {
