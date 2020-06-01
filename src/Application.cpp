@@ -74,7 +74,7 @@ Application::Application(const char *title, int width, int height, int map_size,
     );
     camera = &camera_adventurer;
     characterBallAdv = new Model("res/ball/ball.obj");
-    characterBallUav = new Model("res/ball/ball.obj");
+    characterBallUav = new Model("res/UFO/UFO.obj");
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -143,7 +143,7 @@ void Application::preRender() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    printf("FPS: %.2f\n", 1.0f / deltaTime);    // just for debugging
+    //printf("FPS: %.2f\n", 1.0f / deltaTime);    // just for debugging
 
     processInput(); // input
 
@@ -204,15 +204,16 @@ void Application::render() {
     freeType->use();
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     freeType->setMat4("projection", projection);
-    freeType->renderText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-    freeType->renderText("(C) LearnOpenGL.com", 480.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
-    freeType->renderText("o", width / 2., height / 2., 0.48f, glm::vec3(0.3, 0.7f, 0.9f));   // render cursor
+    std::stringstream ss;
+    ss << (int)(1.0f / deltaTime) << " FPS";
+    freeType->renderText("happy", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+    freeType->renderText(ss.str(), 25.0f, height - 49.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+    freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3, 0.7f, 0.9f));   // render cursor
 }
 
 void Application::renderObject(Shader *shader) {
     // render
     // ------
-
     // Render adventurer
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(camera_adventurer.position.x, -0.7, camera_adventurer.position.z));

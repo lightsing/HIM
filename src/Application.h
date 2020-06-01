@@ -15,6 +15,7 @@
 #include <learnopengl/camera.h>
 #include <learnopengl/shader_m.h>
 #include <learnopengl/model.h>
+#include <sstream>
 
 #include "maze.h"
 #include "text.h"
