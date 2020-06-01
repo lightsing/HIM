@@ -99,7 +99,6 @@ private:
     double startTime = 0.0;
     double gameTime = 0.0;
 
-//    Shader *ourShader;
     Shader *lightCubeShader, *objShader, *depthShader;
 
     map<string, Model> *models;
@@ -109,6 +108,7 @@ private:
     int gameState;  // 0: free, 1: playing, 2: finished
 
     bool debug;
+    bool shadows = true;
 
     bool reachReg(glm::vec3 cen1, glm::vec3 cen2);
 

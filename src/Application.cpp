@@ -262,7 +262,7 @@ void Application::render() {
     objShader->setMat4("projection", projection);
     objShader->setMat4("view", view);
 
-    objShader->setBool("shadows", true);
+    objShader->setBool("shadows", shadows);
     objShader->setFloat("far_plane", far);
 
     objShader->setInt("depthMap", 2);
@@ -387,7 +387,7 @@ void Application::processInput() {
     }
     // Binding option
     if (glfwGetKey(m_window, GLFW_KEY_B) == GLFW_PRESS) {
-        bindAdventurer = (bindAdventurer) ? false : true;
+        bindAdventurer = !bindAdventurer;
     }
     // possible camera switching
     if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {
@@ -410,6 +410,8 @@ void Application::processInput() {
         camera->moveAround(CameraMovement::UP, deltaTime, maze, 2.);
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera->moveAround(CameraMovement::DOWN, deltaTime, maze, 2.);
+    if (glfwGetKey(m_window, GLFW_KEY_P) == GLFW_PRESS)
+        shadows = !shadows;
     // change moving speed
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camera->changeSpeed(SPEED_FAST_DEFAULT);
