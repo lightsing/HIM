@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <learnopengl/camera.h>
-#include <learnopengl/shader_m.h>
+#include <learnopengl/shader.h>
 #include <learnopengl/model.h>
 #include <sstream>
 
@@ -71,8 +71,9 @@ private:
     CubeModel ***wall_model;
 
     GLFWwindow *m_window;
-    GLFWmonitor* m_monitor;
+    GLFWmonitor *m_monitor;
     int width, height;
+    GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
     float lastX, lastY;
     float deltaTime, lastFrame;
@@ -87,8 +88,11 @@ private:
     Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
     Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
     Camera *camera;
-    Model* characterBallAdv;
-    Model* characterBallUav;
+    Model *characterBallAdv;
+    Model *characterBallUav;
+
+    GLuint depthMapFBO;
+    GLuint depthCubeMap;
 
     FreeType *freeType;
 
@@ -96,7 +100,7 @@ private:
     double gameTime = 0.0;
 
 //    Shader *ourShader;
-    Shader *lightCubeShader, *objShader;
+    Shader *lightCubeShader, *objShader, *depthShader;
 
     map<string, Model> *models;
 
@@ -119,7 +123,8 @@ private:
     void scrollCallback(double xoffset, double yoffset);
 
     void centerWindow();
-    GLFWmonitor* getBestMonitor();
+
+    GLFWmonitor *getBestMonitor();
 
     class CallbackWrapper {
     public:

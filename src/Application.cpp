@@ -87,6 +87,8 @@ Application::Application(const char *title, int width, int height, int map_size,
 //    ourShader = new Shader("res/shader.vs", "res/shader.fs");
     lightCubeShader = new Shader("res/lightShader.vs", "res/lightShader.fs");
     objShader = new Shader("res/objShader.vs", "res/objShader.fs");
+    depthShader = new Shader("res/shadow_mapping_depth.vs", "res/shadow_mapping_depth.fs",
+                             "res/shadow_mapping_depth.gs");
 
     // Store the maze
     models = new map<string, Model>;
@@ -140,6 +142,30 @@ Application::Application(const char *title, int width, int height, int map_size,
                 wall_model[i][j][_].model_res = glm::mat3(glm::transpose(glm::inverse(model)));
             }
         }
+
+    // Configure depth map FBO
+    glGenFramebuffers(1, &depthMapFBO);
+    // Create depth cubemap texture
+    glGenTextures(1, &depthCubeMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubeMap);
+    for (GLuint i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // Attach cubemap as depth map FBO's color buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubeMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
 void Application::preRender() {
@@ -177,16 +203,51 @@ void Application::preRender() {
 }
 
 void Application::render() {
+
 //    // view/projection transformations
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float) width / (float) height,
                                             camera->zNear, camera->zFar);
     glm::mat4 view = camera->getViewMatrix();
     glm::vec3 lightPos(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z);
 
+    // 0. Create depth cubemap transformation matrices
+    GLfloat aspect = (GLfloat) SHADOW_WIDTH / (GLfloat) SHADOW_HEIGHT;
+    GLfloat near = 1.0f;
+    GLfloat far = 10000.0f;
+    glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
+    std::vector<glm::mat4> shadowTransforms;
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+    // 1. Render scene to depth cubemap
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    depthShader->use();
+    for (GLuint i = 0; i < 6; ++i)
+        depthShader->setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+    depthShader->setFloat("far_plane", far);
+    depthShader->setVec3("lightPos", lightPos);
+    renderObject(depthShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // don't forget to enable shader before setting uniforms
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     objShader->use();
     objShader->setInt("material.diffuse", 0);
     objShader->setInt("material.specular", 1);
+    objShader->setFloat("material.shininess", 64.0f);
 
     objShader->setVec3("lights[0].position", lightPos);
     objShader->setVec3("lights[0].ambient", 0.3f, 0.3f, 0.3f);
@@ -196,12 +257,17 @@ void Application::render() {
     objShader->setFloat("lights[0].linear", 0.01f);
     objShader->setFloat("lights[0].quadratic", 0.00025);
 
-    objShader->setFloat("material.shininess", 64.0f);
     objShader->setVec3("viewPos", camera->position);
 
     objShader->setMat4("projection", projection);
     objShader->setMat4("view", view);
 
+    objShader->setBool("shadows", true);
+    objShader->setFloat("far_plane", far);
+
+    objShader->setInt("depthMap", 2);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubeMap);
     renderObject(objShader);
 
     lightCubeShader->use();
@@ -215,12 +281,12 @@ void Application::render() {
     projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     freeType->setMat4("projection", projection);
     std::stringstream ss_fps;
-    ss_fps << (int)(1.0f / deltaTime) << " FPS";
+    ss_fps << (int) (1.0f / deltaTime) << " FPS";
     freeType->renderText(ss_fps.str(), 25.0f, height - 49.0f, 0.5f, glm::vec3(0.8f, 0.8f, 0.2f));
     freeType->renderText(gamestates[gameState], 25.0f, 25.0f, 1.0f, glm::vec3(0.5f, 0.8f, 0.2f));
 
     std::stringstream ss_time;
-    ss_time << "time " << (int)gameTime;
+    ss_time << "time " << (int) gameTime;
     freeType->renderText(ss_time.str(), width / 2. - 2 * font_size * 0.8f, 25.0f, 0.8f, glm::vec3(0.2f, 0.8f, 0.8f));
 
     freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3f, 0.7f, 0.9f));   // render cursor
@@ -414,7 +480,7 @@ void Application::centerWindow() {
     if (!m_monitor) {
         return;
     }
-    const GLFWvidmode* mode = glfwGetVideoMode(m_monitor);
+    const GLFWvidmode *mode = glfwGetVideoMode(m_monitor);
     if (!mode) {
         return;
     }
@@ -431,9 +497,10 @@ void Application::centerWindow() {
             monitorY + (mode->height - windowHeight) / 2
     );
 }
-GLFWmonitor* Application::getBestMonitor() {
+
+GLFWmonitor *Application::getBestMonitor() {
     int monitorCount;
-    GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+    GLFWmonitor **monitors = glfwGetMonitors(&monitorCount);
 
     if (!monitors) {
         return NULL;
@@ -443,15 +510,15 @@ GLFWmonitor* Application::getBestMonitor() {
     glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
     glfwGetWindowPos(m_window, &windowX, &windowY);
 
-    GLFWmonitor* bestMonitor = NULL;
+    GLFWmonitor *bestMonitor = NULL;
     int bestArea = 0;
 
     for (int i = 0; i < monitorCount; ++i) {
-        GLFWmonitor* monitor = monitors[i];
+        GLFWmonitor *monitor = monitors[i];
         int monitorX, monitorY;
         glfwGetMonitorPos(monitor, &monitorX, &monitorY);
 
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         if (!mode) {
             continue;
         }

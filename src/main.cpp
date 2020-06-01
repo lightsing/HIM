@@ -1,7 +1,7 @@
 #include "Application.h"
 #include "maze.h"
 
-#define DEBUG true
+#define DEBUG false
 
 int main() {
 
