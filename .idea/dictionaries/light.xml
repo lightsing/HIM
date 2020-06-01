@@ -3,6 +3,7 @@
     <words>
       <w>assimp</w>
       <w>framebuffer</w>
+      <w>freetype</w>
       <w>glfw</w>
     </words>
   </dictionary>
