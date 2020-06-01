@@ -139,7 +139,7 @@ void Application::preRender() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     if (debug) {
-        printf("FPS: %.f\n", 1 / deltaTime);    // just for debugging
+        printf("FPS: %.2f\n", 1.0f / deltaTime);    // just for debugging
     }
 
     processInput(); // input
