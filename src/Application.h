@@ -96,6 +96,8 @@ private:
 
     FreeType *freeType;
 
+    double startTime = 0.0;
+    double endTime = 0.0;
     double gameTime = 0.0;
     double preTime = 0.0;
     double notAdvTime = 0.0;

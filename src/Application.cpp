@@ -190,19 +190,23 @@ void Application::preRender() {
         // at start point
         gameState = 1;
         preTime = glfwGetTime();
+        startTime = glfwGetTime();
 //        printf("Start playing now\n");    // just for debugging
     } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
         // at end point
         gameState = 2;
+        endTime = glfwGetTime();
 //        printf("Congratulations, you win!\n");    // just for debugging
     }
 
     if (gameState == 1) {
-        gameTime += glfwGetTime() - preTime;
-        preTime = glfwGetTime();
-        if(!adventurer_handle){
-            gameTime += glfwGetTime() - notAdvTime;
+        if (adventurer_handle) {
+            gameTime += glfwGetTime() - preTime;
+        } else {
+            gameTime += 3 * (glfwGetTime() - preTime);
         }
+
+        preTime = glfwGetTime();
     }
 }
 
@@ -294,6 +298,23 @@ void Application::render() {
     freeType->renderText(ss_time.str(), width / 2. - 2 * font_size * 0.8f, 25.0f, 0.8f, glm::vec3(0.2f, 0.8f, 0.8f));
 
     freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3f, 0.7f, 0.9f));   // render cursor
+
+    freeType->renderText("enter R to replay", width - 260.0f, height - 40.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter 1 to adv mode", width - 270.0f, height - 70.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter 2 to uav mode", width - 273.0f, height - 100.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+
+    if (adventurer_handle) {
+        freeType->renderText("a", width - 100.0f, 25.0f, 1.5f, glm::vec3(0.5f, 0.8f, 0.2f));
+    } else {
+        freeType->renderText("u", width - 100.0f, 25.0f, 1.5f, glm::vec3(0.5f, 0.8f, 0.2f));
+    }
+
+    if (gameState == 1 && glfwGetTime() - startTime <= 1) {
+        freeType->renderText("go go go", width / 2 - 400, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
+    if (gameState == 2 && glfwGetTime() - endTime <= 3) {
+        freeType->renderText("you win", width / 2 - 300, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
 }
 
 void Application::renderObject(Shader *shader) {
@@ -399,7 +420,7 @@ void Application::processInput() {
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
         camera_uav.locateTarget(camera_adventurer.position);
-        if(adventurer_handle){
+        if (adventurer_handle) {
             notAdvTime = glfwGetTime();
             gameTime += 5;
         }
