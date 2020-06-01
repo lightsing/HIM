@@ -2,6 +2,7 @@
 // Created by light on 1/6/2020.
 //
 #include <ft2build.h>
+#include <glm/ext.hpp>
 #include FT_FREETYPE_H
 
 #include "text.h"
@@ -69,9 +70,12 @@ FreeType::FreeType(const char *filename) {
     }
 }
 
-void FreeType::setMat4(const std::string &name, const glm::mat4 &mat) const {
+void FreeType::use() const {
     s.use();
-    glUniformMatrix4fv(glGetUniformLocation(s.ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+void FreeType::setMat4(const std::string &name, const glm::mat4 &mat) const {
+    s.setMat4(name, mat);
 }
 
 void FreeType::renderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
