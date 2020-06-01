@@ -153,7 +153,7 @@ void Application::preRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update uav's position with the adventurer
-    if (!debug && adventurer_handle && bindAdventurer) {
+    if (adventurer_handle && bindAdventurer) {
         camera_uav.position = camera_adventurer.position + glm::vec3(-1., 12., -1.);
     }
     camera = adventurer_handle ? &camera_adventurer : &camera_uav;
@@ -219,7 +219,7 @@ void Application::render() {
 
     std::stringstream ss_time;
     ss_time << "time " << (int)gameTime;
-    freeType->renderText(ss_time.str(), width / 2 - 144, 25.0f, 0.8f, glm::vec3(0.2f, 0.8f, 0.8f));
+    freeType->renderText(ss_time.str(), width / 2. - 2 * font_size * 0.8f, 25.0f, 0.8f, glm::vec3(0.2f, 0.8f, 0.8f));
 
     freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3f, 0.7f, 0.9f));   // render cursor
 }
