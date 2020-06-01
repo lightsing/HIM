@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenGL REQUIRED)
 set(FREETYPE_LIBRARY ${PROJECT_SOURCE_DIR}/vendor/freetype.lib)
+set(FREETYPE_INCLUDE_DIRS vendor/freetype2/include)
 find_package(Freetype REQUIRED)
 
 add_subdirectory(vendor)
