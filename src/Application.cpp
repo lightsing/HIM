@@ -74,6 +74,9 @@ Application::Application(const char *title, int width, int height, int map_size,
     );
     camera = &camera_adventurer;
 
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     freeType = new FreeType("res/assets/fonts/minecrafter/Minecrafter.Reg.ttf");
 //    ourShader = new Shader("res/shader.vs", "res/shader.fs");
     lightCubeShader = new Shader("res/lightShader.vs", "res/lightShader.fs");
@@ -199,10 +202,11 @@ void Application::render() {
     renderLight(lightPos);
 
     freeType->use();
+    projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
     freeType->setMat4("projection", projection);
     freeType->renderText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-    freeType->renderText("(C) LearnOpenGL.com", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
-
+    freeType->renderText("(C) LearnOpenGL.com", 480.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+    freeType->renderText("o", width / 2., height / 2., 0.48f, glm::vec3(0.3, 0.7f, 0.9f));   // render cursor
 }
 
 void Application::renderObject(Shader *shader) {
