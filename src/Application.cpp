@@ -420,7 +420,7 @@ void Application::processInput() {
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
         camera_uav.locateTarget(camera_adventurer.position);
-        if (adventurer_handle) {
+        if (gameState == 1 && adventurer_handle) {
             notAdvTime = glfwGetTime();
             gameTime += 5;
         }
