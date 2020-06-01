@@ -73,6 +73,8 @@ Application::Application(const char *title, int width, int height, int map_size,
             false
     );
     camera = &camera_adventurer;
+    characterBallAdv = new Model("res/ball/ball.obj");
+    characterBallUav = new Model("res/ball/ball.obj");
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -141,9 +143,7 @@ void Application::preRender() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    if (debug) {
-//        printf("FPS: %.2f\n", 1.0f / deltaTime);    // just for debugging
-    }
+    printf("FPS: %.2f\n", 1.0f / deltaTime);    // just for debugging
 
     processInput(); // input
 
@@ -219,8 +219,7 @@ void Application::renderObject(Shader *shader) {
     model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
     shader->setMat4("model", model);
     shader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
-    Model characterBallAdv("res/ball.obj");
-    characterBallAdv.Draw(*shader);
+    characterBallAdv->Draw(*shader);
 
 //    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
 //        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
@@ -267,8 +266,7 @@ void Application::renderLight(glm::vec3 lightPos) {
                            lightPos);
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     lightCubeShader->setMat4("model", model);
-    Model characterBallUav("res/ball.obj");
-    characterBallUav.Draw(*lightCubeShader);
+    characterBallUav->Draw(*lightCubeShader);
 }
 
 void Application::postRender() {

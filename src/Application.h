@@ -85,6 +85,8 @@ private:
     Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
     Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
     Camera *camera;
+    Model* characterBallAdv;
+    Model* characterBallUav;
 
     FreeType *freeType;
 
