@@ -16,7 +16,41 @@ Maze::Maze(int num_of_row, int num_of_col) {
     this->make_maze();
 
     this->start = glm::vec2(1, 0);
-    this->end =glm::vec2(get_row_num() - 2, get_col_num() - 1);
+    this->end = glm::vec2(get_row_num() - 2, get_col_num() - 1);
+
+    while (true) {
+        int i = rand() % (row * 2 + 1);
+        int j = rand() % (col * 2 + 1);
+        if (!isWall(i, j)) {
+            this->thingOne.xPos = i;
+            this->thingOne.yPos = j;
+            std::cout << i << " " << j << std::endl;
+            break;
+        }
+    }
+
+    while (true) {
+        int i = rand() % (row * 2 + 1);
+        int j = rand() % (col * 2 + 1);
+        if (!isWall(i, j) && (i != this->thingOne.xPos || j != this->thingOne.yPos)) {
+            this->thingTwo.xPos = i;
+            this->thingTwo.yPos = j;
+            std::cout << i << " " << j << std::endl;
+            break;
+        }
+    }
+
+    while (true) {
+        int i = rand() % (row * 2 + 1);
+        int j = rand() % (col * 2 + 1);
+        if (!isWall(i, j) && (i != this->thingOne.xPos || j != this->thingOne.yPos)
+            && (i != this->thingTwo.xPos || j != this->thingTwo.yPos)) {
+            this->thingThree.xPos = i;
+            this->thingThree.yPos = j;
+            std::cout << i << " " << j << std::endl;
+            break;
+        }
+    }
 }
 
 void Maze::make_maze() {
@@ -97,7 +131,7 @@ int Maze::get_row_num() const {
 }
 
 bool Maze::isWall(int i, int j) const {
-    return maze_map[i+1][j+1] == 1;
+    return maze_map[i + 1][j + 1] == 1;
 }
 
 glm::vec3 Maze::getStartPoint(double len) {
@@ -106,4 +140,16 @@ glm::vec3 Maze::getStartPoint(double len) {
 
 glm::vec3 Maze::getEndPoint(double len) {
     return glm::vec3(end.x * len, 0, end.y * len);
+}
+
+Thing Maze::getThingOne() {
+    return this->thingOne;
+}
+
+Thing Maze::getThingTwo() {
+    return this->thingTwo;
+}
+
+Thing Maze::getThingThree() {
+    return this->thingThree;
 }

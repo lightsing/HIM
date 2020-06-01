@@ -101,7 +101,7 @@ void Application::init(int map_size, int maze_length, int maze_width) {
         models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
     }
     maze = new Maze(this->maze_len, this->maze_wid);
-//    maze->print_maze();   // just for debugging
+    maze->print_maze();   // just for debugging
 
     gameState = 0;
 
