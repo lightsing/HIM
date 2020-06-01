@@ -82,7 +82,7 @@ private:
 
     bool debug;
 
-    bool Application::reachReg(glm::vec3 cen1, glm::vec3 cen2);
+    bool reachReg(glm::vec3 cen1, glm::vec3 cen2);
 
     void processInput();
 
