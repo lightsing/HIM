@@ -189,7 +189,7 @@ void Application::preRender() {
     if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
         // at start point
         gameState = 1;
-        startTime = glfwGetTime();
+        preTime = glfwGetTime();
 //        printf("Start playing now\n");    // just for debugging
     } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
         // at end point
@@ -198,7 +198,11 @@ void Application::preRender() {
     }
 
     if (gameState == 1) {
-        gameTime = glfwGetTime() - startTime;
+        gameTime += glfwGetTime() - preTime;
+        preTime = glfwGetTime();
+        if(!adventurer_handle){
+            gameTime += glfwGetTime() - notAdvTime;
+        }
     }
 }
 
@@ -382,8 +386,8 @@ void Application::processInput() {
                 false
         );
         gameState = 0;
-        startTime = 0;
         gameTime = 0;
+        preTime = glfwGetTime();
     }
     // Binding option
     if (glfwGetKey(m_window, GLFW_KEY_B) == GLFW_PRESS) {
@@ -395,6 +399,10 @@ void Application::processInput() {
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
         camera_uav.locateTarget(camera_adventurer.position);
+        if(adventurer_handle){
+            notAdvTime = glfwGetTime();
+            gameTime += 5;
+        }
         adventurer_handle = false;
     }
     // keyboard movement
