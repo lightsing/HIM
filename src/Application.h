@@ -17,6 +17,7 @@
 #include <learnopengl/model.h>
 
 #include "maze.h"
+#include "text.h"
 
 struct CubeModel {
     string type;
@@ -84,6 +85,8 @@ private:
     Camera camera_adventurer = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, true);
     Camera camera_uav = Camera(CAM_POS_DEFAULT, WORLD_UP_DEFAULT, TARGET_POS_DEFAULT, false);
     Camera *camera;
+
+    FreeType *freeType;
 
 //    Shader *ourShader;
     Shader *lightCubeShader, *objShader;

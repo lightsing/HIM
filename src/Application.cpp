@@ -31,7 +31,6 @@ Application::Application(const char *title, int width, int height, int map_size,
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -75,6 +74,7 @@ Application::Application(const char *title, int width, int height, int map_size,
     );
     camera = &camera_adventurer;
 
+    freeType = new FreeType("res/assets/fonts/minecrafter/Minecrafter.Reg.ttf");
 //    ourShader = new Shader("res/shader.vs", "res/shader.fs");
     lightCubeShader = new Shader("res/lightShader.vs", "res/lightShader.fs");
     objShader = new Shader("res/objShader.vs", "res/objShader.fs");
@@ -197,6 +197,11 @@ void Application::render() {
     lightCubeShader->setMat4("view", view);
 
     renderLight(lightPos);
+
+    freeType->setMat4("projection", projection);
+    freeType->renderText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+    freeType->renderText("(C) LearnOpenGL.com", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+
 }
 
 void Application::renderObject(Shader *shader) {
