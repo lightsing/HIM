@@ -12,4 +12,4 @@
 	url = https://github.com/nothings/stb.git
 [submodule "vendor/freetype2"]
 	path = vendor/freetype2
-	url = git://git.sv.nongnu.org/freetype/freetype2.git
+	url = https://git.sv.nongnu.org/r/freetype/freetype2.git
