@@ -138,6 +138,9 @@ void Application::preRender() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    if (debug) {
+        printf("FPS: %.f\n", 1 / deltaTime);    // just for debugging
+    }
 
     processInput(); // input
 
