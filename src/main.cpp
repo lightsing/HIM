@@ -1,7 +1,7 @@
 #include "Application.h"
 #include "maze.h"
 
-#define DEBUG false
+#define DEBUG true
 
 int main() {
 
@@ -10,8 +10,8 @@ int main() {
     int width = 1920, height = 1080;
     int map_sz = 16, maze_len = 21, maze_wid = 23;
     if (DEBUG) {
-        width = 800;
-        height = 600;
+        width = 1200;
+        height = 768;
         map_sz = 10;
         maze_len = 7;
         maze_wid = 5;

@@ -48,6 +48,8 @@ Application::Application(const char *title, int width, int height, int map_size,
     m_window = window;
     this->width = width;
     this->height = height;
+    m_monitor = getBestMonitor();
+    centerWindow();
 
     lastX = width / 2.f;
     lastY = height / 2.f;
@@ -92,7 +94,7 @@ Application::Application(const char *title, int width, int height, int map_size,
         models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
     }
     maze = new Maze(this->maze_len, this->maze_wid);
-    maze->print_maze();
+//    maze->print_maze();   // just for debugging
 
     gameState = 0;
 
@@ -162,11 +164,11 @@ void Application::preRender() {
         // at start point
         gameState = 1;
         startTime = glfwGetTime();
-        printf("Start playing now\n");
+//        printf("Start playing now\n");    // just for debugging
     } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
         // at end point
         gameState = 2;
-        printf("Congratulations, you win!\n");
+//        printf("Congratulations, you win!\n");    // just for debugging
     }
 
     if (gameState == 1) {
@@ -405,3 +407,66 @@ void Application::CallbackWrapper::setApplication(Application *application) {
 }
 
 Application *Application::CallbackWrapper::s_application = nullptr;
+
+/* Center Window Functions */
+void Application::centerWindow() {
+    // center the window on the best suitable monitor
+    if (!m_monitor) {
+        return;
+    }
+    const GLFWvidmode* mode = glfwGetVideoMode(m_monitor);
+    if (!mode) {
+        return;
+    }
+
+    int monitorX, monitorY;
+    glfwGetMonitorPos(m_monitor, &monitorX, &monitorY);
+
+    int windowWidth, windowHeight;
+    glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
+
+    glfwSetWindowPos(
+            m_window,
+            monitorX + (mode->width - windowWidth) / 2,
+            monitorY + (mode->height - windowHeight) / 2
+    );
+}
+GLFWmonitor* Application::getBestMonitor() {
+    int monitorCount;
+    GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+
+    if (!monitors) {
+        return NULL;
+    }
+
+    int windowX, windowY, windowWidth, windowHeight;
+    glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
+    glfwGetWindowPos(m_window, &windowX, &windowY);
+
+    GLFWmonitor* bestMonitor = NULL;
+    int bestArea = 0;
+
+    for (int i = 0; i < monitorCount; ++i) {
+        GLFWmonitor* monitor = monitors[i];
+        int monitorX, monitorY;
+        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        if (!mode) {
+            continue;
+        }
+
+        int areaMinX = MAX(windowX, monitorX);
+        int areaMinY = MAX(windowY, monitorY);
+        int areaMaxX = MIN(windowX + windowWidth, monitorX + mode->width);
+        int areaMaxY = MIN(windowY + windowHeight, monitorY + mode->height);
+        int area = (areaMaxX - areaMinX) * (areaMaxY - areaMinY);
+
+        if (area > bestArea) {
+            bestArea = area;
+            bestMonitor = monitor;
+        }
+    }
+
+    return bestMonitor;
+}

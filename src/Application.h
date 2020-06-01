@@ -71,6 +71,7 @@ private:
     CubeModel ***wall_model;
 
     GLFWwindow *m_window;
+    GLFWmonitor* m_monitor;
     int width, height;
 
     float lastX, lastY;
@@ -116,6 +117,9 @@ private:
     void keyboardCallback(int key, int scancode, int action, int mods);
 
     void scrollCallback(double xoffset, double yoffset);
+
+    void centerWindow();
+    GLFWmonitor* getBestMonitor();
 
     class CallbackWrapper {
     public:
