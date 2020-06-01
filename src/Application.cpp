@@ -120,15 +120,18 @@ void Application::render() {
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float) width / (float) height,
                                             camera->zNear, camera->zFar);
     glm::mat4 view = camera->getViewMatrix();
-    objShader->setVec3("light.position",
-                       glm::vec3(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z));
-    objShader->setVec3("viewPos", camera->position);
+    glm::vec3 lightPos(camera_uav.position.x, camera_uav.position.y + 1.0f, camera_uav.position.z);
 
-    objShader->setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-    objShader->setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
-    objShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    objShader->setVec3("lights[0].position", lightPos);
+    objShader->setVec3("lights[0].ambient", 0.3f, 0.3f, 0.3f);
+    objShader->setVec3("lights[0].diffuse", 0.95f, 0.95f, 0.95f);
+    objShader->setVec3("lights[0].specular", 1.0f, 1.0f, 1.0f);
+    objShader->setFloat("lights[0].constant", 1.0f);
+    objShader->setFloat("lights[0].linear", 0.01f);
+    objShader->setFloat("lights[0].quadratic", 0.00025);
 
     objShader->setFloat("material.shininess", 64.0f);
+    objShader->setVec3("viewPos", camera->position);
 
     objShader->setMat4("projection", projection);
     objShader->setMat4("view", view);
