@@ -11,6 +11,10 @@
 struct Thing {
     int xPos;
     int yPos;
+    glm::vec3 position;
+    glm::mat4 model;
+    glm::mat3 model_res;
+    double bonus;
 };
 
 // 0 represent road, 1 represent wall
@@ -22,6 +26,8 @@ private:
     int **maze_map;
     int row;
     int col;
+
+    double len;
 
     Thing thingOne;
     Thing thingTwo;
@@ -35,8 +41,11 @@ public:
     glm::vec2 start;
     glm::vec2 end;
 
+    bool thingOneCollected;
+    bool thingTwoCollected;
+    bool thingThreeCollected;
 
-    Maze(int, int);
+    Maze(int, int, double);
 
     int **get_maze() const;
 
@@ -48,15 +57,16 @@ public:
 
     bool isWall(int i, int j) const;
 
-    glm::vec3 Maze::getStartPoint(double);
+    glm::vec3 Maze::getStartPoint();
 
-    glm::vec3 Maze::getEndPoint(double);
+    glm::vec3 Maze::getEndPoint();
 
     Thing Maze::getThingOne();
 
     Thing Maze::getThingTwo();
 
     Thing Maze::getThingThree();
+
 };
 
 #endif //HIM_MAZE_H

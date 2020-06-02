@@ -107,6 +107,10 @@ private:
     double preTime = 0.0;
     double notAdvTime = 0.0;
 
+    double thingOneCollectedTime = 0.0;
+    double thingTwoCollectedTime = 0.0;
+    double thingThreeCollectedTime = 0.0;
+
     Shader *lightCubeShader, *objShader, *depthShader;
 
     map<string, Model> *models;
@@ -118,6 +122,8 @@ private:
     bool debug;
     bool shadows = true;
     bool winOrNot = false;
+
+    Model* collection;
 
     bool reachReg(glm::vec3 cen1, glm::vec3 cen2);
 

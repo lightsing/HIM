@@ -2,9 +2,11 @@
 
 #include "maze.h"
 
-Maze::Maze(int num_of_row, int num_of_col) {
+Maze::Maze(int num_of_row, int num_of_col, double _len) {
     this->row = num_of_row / 2;
     this->col = num_of_col / 2;
+
+    this->len = _len;
 
     this->row = this->row <= 0 ? 11 : this->row;
     this->col = this->col <= 0 ? 11 : this->col;
@@ -24,6 +26,14 @@ Maze::Maze(int num_of_row, int num_of_col) {
         if (!isWall(i, j)) {
             this->thingOne.xPos = i;
             this->thingOne.yPos = j;
+            thingOneCollected = false;
+            this->thingOne.position = glm::vec3(i * len, -0.8, j * len);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, this->thingOne.position);
+            model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+            this->thingOne.model = model;
+            this->thingOne.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
+            this->thingOne.bonus = 10;
             std::cout << i << " " << j << std::endl;
             break;
         }
@@ -35,6 +45,14 @@ Maze::Maze(int num_of_row, int num_of_col) {
         if (!isWall(i, j) && (i != this->thingOne.xPos || j != this->thingOne.yPos)) {
             this->thingTwo.xPos = i;
             this->thingTwo.yPos = j;
+            thingTwoCollected = false;
+            this->thingTwo.position = glm::vec3(i * len, -0.8, j * len);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, this->thingTwo.position);
+            model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+            this->thingTwo.model = model;
+            this->thingTwo.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
+            this->thingTwo.bonus = 20;
             std::cout << i << " " << j << std::endl;
             break;
         }
@@ -47,6 +65,14 @@ Maze::Maze(int num_of_row, int num_of_col) {
             && (i != this->thingTwo.xPos || j != this->thingTwo.yPos)) {
             this->thingThree.xPos = i;
             this->thingThree.yPos = j;
+            thingThreeCollected = false;
+            this->thingThree.position = glm::vec3(i * len, -0.8, j * len);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, this->thingThree.position);
+            model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+            this->thingThree.model = model;
+            this->thingThree.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
+            this->thingThree.bonus = 50;
             std::cout << i << " " << j << std::endl;
             break;
         }
@@ -134,11 +160,11 @@ bool Maze::isWall(int i, int j) const {
     return maze_map[i + 1][j + 1] == 1;
 }
 
-glm::vec3 Maze::getStartPoint(double len) {
+glm::vec3 Maze::getStartPoint() {
     return glm::vec3(start.x * len, 0, start.y * len);
 }
 
-glm::vec3 Maze::getEndPoint(double len) {
+glm::vec3 Maze::getEndPoint() {
     return glm::vec3(end.x * len, 0, end.y * len);
 }
 

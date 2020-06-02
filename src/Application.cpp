@@ -100,7 +100,7 @@ void Application::init(int map_size, int maze_length, int maze_width) {
     for (const string &key : model_list) {
         models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
     }
-    maze = new Maze(this->maze_len, this->maze_wid);
+    maze = new Maze(this->maze_len, this->maze_wid, 2.);
     maze->print_maze();   // just for debugging
 
     gameState = 0;
@@ -171,6 +171,9 @@ void Application::init(int map_size, int maze_length, int maze_width) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+    // Collections
+    collection = new Model("res/cube/Cube.obj");
 }
 
 void Application::preRender() {
@@ -191,13 +194,13 @@ void Application::preRender() {
     }
     camera = adventurer_handle ? &camera_adventurer : &camera_uav;
 
-    if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint(2.))) {
+    if (camera->isAdventurer && gameState == 0 && reachReg(camera->position, maze->getStartPoint())) {
         // at start point
         gameState = 1;
         preTime = glfwGetTime();
         startTime = glfwGetTime();
 //        printf("Start playing now\n");    // just for debugging
-    } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint(2.))) {
+    } else if (camera->isAdventurer && gameState == 1 && reachReg(camera->position, maze->getEndPoint())) {
         // at end point
         gameState = 2;
         endTime = glfwGetTime();
@@ -315,6 +318,44 @@ void Application::render() {
         freeType->renderText("u", width - 100.0f, 25.0f, 1.5f, glm::vec3(0.5f, 0.8f, 0.2f));
     }
 
+    if (camera->isAdventurer && gameState == 1 && !maze->thingOneCollected &&
+        reachReg(camera->position, maze->getThingOne().position)) {
+        maze->thingOneCollected = true;
+        gameTime -= maze->getThingOne().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingOneCollectedTime = glfwGetTime();
+    }
+    if (camera->isAdventurer && gameState == 1 && !maze->thingTwoCollected &&
+        reachReg(camera->position, maze->getThingTwo().position)) {
+        maze->thingTwoCollected = true;
+        gameTime -= maze->getThingTwo().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingTwoCollectedTime = glfwGetTime();
+    }
+    if (camera->isAdventurer && gameState == 1 && !maze->thingThreeCollected &&
+        reachReg(camera->position, maze->getThingThree().position)) {
+        maze->thingThreeCollected = true;
+        gameTime -= maze->getThingThree().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingThreeCollectedTime = glfwGetTime();
+    }
+
+    if (gameState == 1 && glfwGetTime() - thingOneCollectedTime <= 3) {
+        std::stringstream ss_thing1;
+        ss_thing1 << "Item collected with bonus " << (int) maze->getThingOne().bonus;
+        freeType->renderText(ss_thing1.str(), width / 2 - 250, height / 2 - 25, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
+    if (gameState == 1 && glfwGetTime() - thingTwoCollectedTime <= 3) {
+        std::stringstream ss_thing2;
+        ss_thing2 << "Item collected with bonus " << (int) maze->getThingTwo().bonus;
+        freeType->renderText(ss_thing2.str(), width / 2 - 250, height / 2 - 55, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
+    if (gameState == 1 && glfwGetTime() - thingThreeCollectedTime <= 3) {
+        std::stringstream ss_thing3;
+        ss_thing3 << "Item collected with bonus " << (int) maze->getThingThree().bonus;
+        freeType->renderText(ss_thing3.str(), width / 2 - 250, height / 2 - 85, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
+
     if (gameState == 1 && glfwGetTime() - startTime <= 1) {
         freeType->renderText("go go go", width / 2 - 400, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
@@ -332,6 +373,7 @@ void Application::render() {
 void Application::renderObject(Shader *shader) {
     // render
     // ------
+
     // Render adventurer
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(camera_adventurer.position.x, -0.7, camera_adventurer.position.z));
@@ -339,6 +381,23 @@ void Application::renderObject(Shader *shader) {
     shader->setMat4("model", model);
     shader->setMat3("model_res", glm::mat3(glm::transpose(glm::inverse(model))));
     characterBallAdv->Draw(*shader);
+
+    // three collections
+    if (!maze->thingOneCollected) {
+        shader->setMat4("model", maze->getThingOne().model);
+        shader->setMat3("model_res", maze->getThingOne().model_res);
+        collection->Draw(*shader);
+    }
+    if (!maze->thingTwoCollected) {
+        shader->setMat4("model", maze->getThingTwo().model);
+        shader->setMat3("model_res", maze->getThingTwo().model_res);
+        collection->Draw(*shader);
+    }
+    if (!maze->thingThreeCollected) {
+        shader->setMat4("model", maze->getThingThree().model);
+        shader->setMat3("model_res", maze->getThingThree().model_res);
+        collection->Draw(*shader);
+    }
 
 //    for(int i = -map_sz; i < maze->get_row_num() + map_sz; ++i)
 //        for(int j = -map_sz; j < maze->get_col_num() + map_sz; ++j) {
