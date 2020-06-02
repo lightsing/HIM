@@ -13,7 +13,7 @@ int main() {
         width = 1600;
         height = 900;
     }
-    auto application = Application("HIM", width, height, map_sz, maze_len, maze_wid, DEBUG);
+    auto application = Application("Maze Runner", width, height, map_sz, maze_len, maze_wid, DEBUG);
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
