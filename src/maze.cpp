@@ -23,7 +23,7 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
     while (true) {
         int i = rand() % (row * 2 + 1);
         int j = rand() % (col * 2 + 1);
-        if (!isWall(i, j)) {
+        if (!isWall(i, j) && !isStartPoint(i, j) && !isEndPoint(i, j)) {
             this->thingOne.xPos = i;
             this->thingOne.yPos = j;
             thingOneCollected = false;
@@ -34,7 +34,6 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
             this->thingOne.model = model;
             this->thingOne.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
             this->thingOne.bonus = 10;
-            std::cout << i << " " << j << std::endl;
             break;
         }
     }
@@ -42,7 +41,8 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
     while (true) {
         int i = rand() % (row * 2 + 1);
         int j = rand() % (col * 2 + 1);
-        if (!isWall(i, j) && (i != this->thingOne.xPos || j != this->thingOne.yPos)) {
+        if (!isWall(i, j) && !isStartPoint(i, j) && !isEndPoint(i, j) &&
+            (i != this->thingOne.xPos || j != this->thingOne.yPos)) {
             this->thingTwo.xPos = i;
             this->thingTwo.yPos = j;
             thingTwoCollected = false;
@@ -53,7 +53,6 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
             this->thingTwo.model = model;
             this->thingTwo.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
             this->thingTwo.bonus = 20;
-            std::cout << i << " " << j << std::endl;
             break;
         }
     }
@@ -61,8 +60,9 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
     while (true) {
         int i = rand() % (row * 2 + 1);
         int j = rand() % (col * 2 + 1);
-        if (!isWall(i, j) && (i != this->thingOne.xPos || j != this->thingOne.yPos)
-            && (i != this->thingTwo.xPos || j != this->thingTwo.yPos)) {
+        if (!isWall(i, j) && !isStartPoint(i, j) && !isEndPoint(i, j) &&
+            (i != this->thingOne.xPos || j != this->thingOne.yPos) &&
+            (i != this->thingTwo.xPos || j != this->thingTwo.yPos)) {
             this->thingThree.xPos = i;
             this->thingThree.yPos = j;
             thingThreeCollected = false;
@@ -73,7 +73,6 @@ Maze::Maze(int num_of_row, int num_of_col, double _len) {
             this->thingThree.model = model;
             this->thingThree.model_res = glm::mat3(glm::transpose(glm::inverse(model)));
             this->thingThree.bonus = 50;
-            std::cout << i << " " << j << std::endl;
             break;
         }
     }
@@ -160,10 +159,16 @@ bool Maze::isWall(int i, int j) const {
     return maze_map[i + 1][j + 1] == 1;
 }
 
+bool Maze::isStartPoint(int i, int j) {
+    return (i == (int)start.x && j == (int)start.y);
+}
 glm::vec3 Maze::getStartPoint() {
     return glm::vec3(start.x * len, 0, start.y * len);
 }
 
+bool Maze::isEndPoint(int i, int j) {
+    return (i == (int)end.x && j == (int)end.y);
+}
 glm::vec3 Maze::getEndPoint() {
     return glm::vec3(end.x * len, 0, end.y * len);
 }

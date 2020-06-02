@@ -101,7 +101,7 @@ void Application::init(int map_size, int maze_length, int maze_width) {
         models->insert(pair<string, Model>(key, Model("res/assets/" + key + ".obj")));
     }
     maze = new Maze(this->maze_len, this->maze_wid, 2.);
-    maze->print_maze();   // just for debugging
+//    maze->print_maze();   // just for debugging
 
     gameState = 0;
 
@@ -174,6 +174,8 @@ void Application::init(int map_size, int maze_length, int maze_width) {
 
     // Collections
     collection = new Model("res/cube/Cube.obj");
+
+    markWall = new int[3] {-1, -1, -1};
 }
 
 void Application::preRender() {
@@ -216,6 +218,28 @@ void Application::preRender() {
         }
 
         preTime = glfwGetTime();
+    }
+
+    if (camera->isAdventurer && gameState == 1 && !maze->thingOneCollected &&
+        reachReg(camera->position, maze->getThingOne().position)) {
+        maze->thingOneCollected = true;
+        gameTime -= maze->getThingOne().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingOneCollectedTime = glfwGetTime();
+    }
+    if (camera->isAdventurer && gameState == 1 && !maze->thingTwoCollected &&
+        reachReg(camera->position, maze->getThingTwo().position)) {
+        maze->thingTwoCollected = true;
+        gameTime -= maze->getThingTwo().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingTwoCollectedTime = glfwGetTime();
+    }
+    if (camera->isAdventurer && gameState == 1 && !maze->thingThreeCollected &&
+        reachReg(camera->position, maze->getThingThree().position)) {
+        maze->thingThreeCollected = true;
+        gameTime -= maze->getThingThree().bonus;
+        gameTime = (gameTime < 0) ? 0 : gameTime;
+        thingThreeCollectedTime = glfwGetTime();
     }
 }
 
@@ -308,9 +332,10 @@ void Application::render() {
 
     freeType->renderText("o", width / 2., height / 2., 0.5f, glm::vec3(0.3f, 0.7f, 0.9f));   // render cursor
 
-    freeType->renderText("enter R to replay", width - 260.0f, height - 40.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
-    freeType->renderText("enter 1 to adv mode", width - 270.0f, height - 70.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
-    freeType->renderText("enter 2 to uav mode", width - 273.0f, height - 100.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter R to replay or level up", width - 383.0f, height - 40.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter E to mark a wall block", width - 378.0f, height - 70.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter 1 to adv mode", width - 262.0f, height - 100.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
+    freeType->renderText("enter 2 to uav mode", width - 266.0f, height - 130.0f, 0.4f, glm::vec3(0.5f, 0.2f, 0.5f));
 
     if (adventurer_handle) {
         freeType->renderText("a", width - 100.0f, 25.0f, 1.5f, glm::vec3(0.5f, 0.8f, 0.2f));
@@ -318,42 +343,20 @@ void Application::render() {
         freeType->renderText("u", width - 100.0f, 25.0f, 1.5f, glm::vec3(0.5f, 0.8f, 0.2f));
     }
 
-    if (camera->isAdventurer && gameState == 1 && !maze->thingOneCollected &&
-        reachReg(camera->position, maze->getThingOne().position)) {
-        maze->thingOneCollected = true;
-        gameTime -= maze->getThingOne().bonus;
-        gameTime = (gameTime < 0) ? 0 : gameTime;
-        thingOneCollectedTime = glfwGetTime();
-    }
-    if (camera->isAdventurer && gameState == 1 && !maze->thingTwoCollected &&
-        reachReg(camera->position, maze->getThingTwo().position)) {
-        maze->thingTwoCollected = true;
-        gameTime -= maze->getThingTwo().bonus;
-        gameTime = (gameTime < 0) ? 0 : gameTime;
-        thingTwoCollectedTime = glfwGetTime();
-    }
-    if (camera->isAdventurer && gameState == 1 && !maze->thingThreeCollected &&
-        reachReg(camera->position, maze->getThingThree().position)) {
-        maze->thingThreeCollected = true;
-        gameTime -= maze->getThingThree().bonus;
-        gameTime = (gameTime < 0) ? 0 : gameTime;
-        thingThreeCollectedTime = glfwGetTime();
-    }
-
     if (gameState == 1 && glfwGetTime() - thingOneCollectedTime <= 3) {
         std::stringstream ss_thing1;
         ss_thing1 << "Item collected with bonus " << (int) maze->getThingOne().bonus;
-        freeType->renderText(ss_thing1.str(), width / 2 - 250, height / 2 - 25, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+        freeType->renderText(ss_thing1.str(), width / 2 - 250, height / 2 - 35, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
     if (gameState == 1 && glfwGetTime() - thingTwoCollectedTime <= 3) {
         std::stringstream ss_thing2;
         ss_thing2 << "Item collected with bonus " << (int) maze->getThingTwo().bonus;
-        freeType->renderText(ss_thing2.str(), width / 2 - 250, height / 2 - 55, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+        freeType->renderText(ss_thing2.str(), width / 2 - 250, height / 2 - 70, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
     if (gameState == 1 && glfwGetTime() - thingThreeCollectedTime <= 3) {
         std::stringstream ss_thing3;
         ss_thing3 << "Item collected with bonus " << (int) maze->getThingThree().bonus;
-        freeType->renderText(ss_thing3.str(), width / 2 - 250, height / 2 - 85, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+        freeType->renderText(ss_thing3.str(), width / 2 - 250, height / 2 - 105, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
 
     if (gameState == 1 && glfwGetTime() - startTime <= 1) {
@@ -362,11 +365,19 @@ void Application::render() {
     if (gameState == 2 && glfwGetTime() - endTime <= 3) {
         freeType->renderText("you win", width / 2 - 300, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
     }
+
     std::stringstream ss_level;
     ss_level << "level " << (int) gameLevel;
-
     if (glfwGetTime() - levelTime <= 3) {
         freeType->renderText(ss_level.str(), width / 2 - 300, height / 2, 3.0f, glm::vec3(0.95f, 0.29f, 0.49f));
+    }
+
+    if (gameState == 1 && glfwGetTime() - markJitterTime <= 1) {
+        if (markWall[0] < 0 || markWall[1] < 0 || markWall[2] < 0) {
+            freeType->renderText("wall mark removed", width / 2 - 150, height / 2 + 150, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+        } else {
+            freeType->renderText("wall marked", width / 2 - 100, height / 2 + 150, 0.6f, glm::vec3(0.95f, 0.29f, 0.49f));
+        }
     }
 }
 
@@ -429,8 +440,9 @@ void Application::renderObject(Shader *shader) {
             for (int _ = 0; _ < 5; ++_) {
                 shader->setMat4("model", wall_model[i][j][_].model);
                 shader->setMat3("model_res", wall_model[i][j][_].model_res);
-                wall_model[i][j][_].type = (curPointAt[1] >= 0 && curPointAt[0] == i && curPointAt[1] == _ &&
-                                            curPointAt[2] == j)
+                wall_model[i][j][_].type = (gameState == 1 &&
+                        ((curPointAt[0] == i && curPointAt[1] == _ && curPointAt[2] == j) ||
+                        (markWall[0] == i && markWall[1] == _ && markWall[2] == j)))
                                            ? "bedrock" : "stone";
                 models->at(wall_model[i][j][_].type).Draw(*shader);
             }
@@ -498,13 +510,29 @@ void Application::processInput() {
     if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {
         adventurer_handle = true;
     }
-    if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
+    if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS && gameState != 0) {
         camera_uav.locateTarget(camera_adventurer.position);
         if (gameState == 1 && adventurer_handle) {
             notAdvTime = glfwGetTime();
             gameTime += 5;
         }
         adventurer_handle = false;
+    }
+    // mark an object
+    if (glfwGetKey(m_window, GLFW_KEY_E) == GLFW_PRESS) {
+        if (gameState == 1 && glfwGetTime() - markJitterTime > 1) {
+            int *curPointAt = camera->getPointAt(maze, 2.);
+            if (curPointAt[0] == markWall[0] && curPointAt[1] == markWall[1] && curPointAt[2] == markWall[2]) {
+                // cancel marking
+                markWall[0] = markWall[1] = markWall[2] = -1;
+            } else {
+                // mark that wall
+                markWall[0] = curPointAt[0];
+                markWall[1] = curPointAt[1];
+                markWall[2] = curPointAt[2];
+            }
+        }
+        markJitterTime = glfwGetTime();
     }
     // keyboard movement
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)

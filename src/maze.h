@@ -57,8 +57,10 @@ public:
 
     bool isWall(int i, int j) const;
 
+    bool Maze::isStartPoint(int, int);
     glm::vec3 Maze::getStartPoint();
 
+    bool Maze::isEndPoint(int, int);
     glm::vec3 Maze::getEndPoint();
 
     Thing Maze::getThingOne();

@@ -111,6 +111,10 @@ private:
     double thingTwoCollectedTime = 0.0;
     double thingThreeCollectedTime = 0.0;
 
+    double markJitterTime = 0.0;
+
+    int* markWall;
+
     Shader *lightCubeShader, *objShader, *depthShader;
 
     map<string, Model> *models;

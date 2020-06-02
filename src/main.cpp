@@ -8,13 +8,10 @@ int main() {
     Application::init();
 
     int width = 1920, height = 1080;
-    int map_sz = 16, maze_len = 21, maze_wid = 23;
+    int map_sz = 20, maze_len = 7, maze_wid = 5;
     if (DEBUG) {
-        width = 1200;
-        height = 768;
-        map_sz = 10;
-        maze_len = 7;
-        maze_wid = 5;
+        width = 1600;
+        height = 900;
     }
     auto application = Application("HIM", width, height, map_sz, maze_len, maze_wid, DEBUG);
 
